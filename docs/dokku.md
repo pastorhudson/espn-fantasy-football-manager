@@ -67,7 +67,7 @@ collects static files once, before traffic switches. A startup check calls the
 container's HTTP health endpoint and verifies the database response.
 
 `app.json` initially runs one web process. Worker and beat stay at zero because
-this release does not schedule tasks. Redis is ready for later phases; when
+scheduling is opt-in (see the Phase 4 section in README.md). Redis is required; when
 scheduled tasks are implemented, explicitly update formation and run one beat.
 
 After deployment, inspect ports; the Dockerfile exposes port 8000. Preserve any

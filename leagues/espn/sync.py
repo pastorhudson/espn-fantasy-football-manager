@@ -11,6 +11,7 @@ from leagues.models import (
     MatchupSnapshot,
     RosterSlot,
     RosterSnapshot,
+    SyncLease,
 )
 from players.models import Player
 from roster_actions.models import AuditEvent
@@ -45,6 +46,15 @@ def save_player(data):
 
 
 def sync_league(client, *, team_id, week=None, free_agent_limit=100):
+    from leagues.locking import sync_lease
+
+    with sync_lease(client.league_id, client.season) as lease:
+        return _fetch(
+            client, team_id=team_id, week=week, free_agent_limit=free_agent_limit, lease=lease
+        )
+
+
+def _fetch(client, *, team_id, week, free_agent_limit, lease):
     data = client.league(week=week)
     try:
         period = week if week is not None else int(data["scoringPeriodId"])
@@ -79,6 +89,7 @@ def sync_league(client, *, team_id, week=None, free_agent_limit=100):
             free_agents,
             transactions,
             free_agent_limit,
+            lease,
         )
     except (KeyError, TypeError, ValueError, AttributeError, StopIteration):
         raise ESPNError(
@@ -87,7 +98,13 @@ def sync_league(client, *, team_id, week=None, free_agent_limit=100):
 
 
 @transaction.atomic
-def _persist(client, data, period, matchup_period, team_id, free_agents, transactions, limit):
+def _persist(
+    client, data, period, matchup_period, team_id, free_agents, transactions, limit, lease
+):
+    key, token = lease
+    held = SyncLease.objects.select_for_update().get(key=key)
+    if held.token != token or held.expires_at <= timezone.now():
+        raise ESPNError("Sync lease expired; no data was saved.")
     league, _ = League.objects.update_or_create(
         espn_id=client.league_id,
         season=client.season,

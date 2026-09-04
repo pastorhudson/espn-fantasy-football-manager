@@ -1,8 +1,8 @@
 # ESPN Fantasy Football Manager
 
 Django service for observing an ESPN fantasy league and, in later phases, proposing
-roster decisions. Phases 1–3 provide environment configuration, database models,
-read-only administration, and a read-only ESPN sync command.
+roster decisions. Phases 1–4 provide environment configuration, database models,
+read-only administration, ESPN synchronization, and shadow lineup recommendations.
 
 **This release cannot change an ESPN roster.** There is no write transport or
 executor. Autopilot defaults to off; shadow mode defaults to on. Environment or
@@ -67,8 +67,12 @@ points, so later player updates do not rewrite those historical observations.
 All HTTP requests complete before the database transaction begins. Missing team
 or roster data, invalid payloads, and failed requests abort the sync. Database
 changes are atomic. Existing team preferences and manager policies survive syncs.
-Concurrent scheduling and snapshot retention are deferred to phase 4; run one
-sync at a time until that scheduler is implemented.
+Manual and scheduled syncs share a database lease per league and season. Overlapping
+runs are rejected; a lease expires after 15 minutes, and an expired owner cannot
+persist its fetched data. Scheduled runs prune observations older than 30 days
+(configurable with `SNAPSHOT_RETENTION_DAYS`). The latest roster per team, latest
+free-agent sample, latest observation per matchup, decision evidence, and audit
+events are retained. Decision evidence and audits therefore continue to grow.
 
 The HTTP client uses fixed read endpoints, bounded timeouts, and at most three
 attempts for transport failures, HTTP 429, and server errors. Authentication
@@ -109,10 +113,9 @@ forwarded protocol header. `/health/` follows the same HTTPS policy.
 off until the domain and all affected subdomains are ready for that commitment.
 
 The Procfile defines Gunicorn, Celery worker, and database-backed Celery beat.
-No periodic sync or roster tasks are installed yet. Run one beat instance when
-scheduling is introduced. The Dockerfile installs production dependencies from `uv.lock`. `app.json` runs
+Install the opt-in schedule as described below. Run exactly one beat instance. The Dockerfile installs production dependencies from `uv.lock`. `app.json` runs
 migrations and static collection before deployment, starts only the web process,
-and checks database readiness. This repository has not yet been deployed.
+and checks database readiness. The web service has been verified on `fantasy.marvn.app`; Phase 4 still needs deployment.
 
 ```bash
 uv run python manage.py migrate
@@ -125,9 +128,55 @@ database backups, and deployment secrets against the
 [Django deployment checklist](https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/).
 The old development secret has been removed from settings; never reuse it.
 
-## Next phases
+## Phase 4: shadow recommendations and scheduling
 
-Phase 4 adds scheduled synchronization and shadow lineup recommendations. ESPN
-write validation, policy enforcement, notifications, MCP access, and deployment
-rollout remain later milestones. `Decision`, `RosterAction`, `AuditEvent`, and
-`ManagerPolicy` are data foundations for that work, not active executors.
+After deploying and migrating, evaluate an existing snapshot:
+
+```bash
+uv run python manage.py recommend_lineup
+```
+
+This saves a `Decision` visible under Decisions in `/fantasy-backend/`, including
+starter assignments, proposed slot changes, projected totals, and warnings.
+Evaluation uses ESPN lineup slot counts and player eligibility, optimizing all
+starter positions together (including flex). OUT, doubtful, suspended, and IR
+players are excluded; players in the IR roster slot are not promoted. Missing
+projections or eligibility, stale snapshots over two hours, and impossible lineups
+produce a blocked decision. Zero projections and injury designations are flagged.
+Game locks and bye status are not established by these snapshots, so every result
+requires review in ESPN. These are projection comparisons, not executable plans.
+Policy flags cannot turn them into ESPN writes. Re-evaluating a snapshot returns
+its existing decision; sync again to get a fresh evaluation.
+
+Enable the schedule explicitly (defaults to every 30 minutes, minimum five):
+
+```bash
+uv run python manage.py configure_sync_schedule --minutes 30
+```
+
+Each scheduled run fetches a new observation, saves a shadow decision, and prunes
+old unreferenced observations. Failures record a sanitized `sync.failed` audit
+entry; the next scheduled run tries again. The HTTP client retains its bounded
+request retries. No notifications are sent in this phase.
+
+For the deployed Dokku app, after pushing the code and running migrations:
+
+```bash
+dokku run fantasy python manage.py configure_sync_schedule --minutes 30
+dokku ps:scale fantasy web=1 worker=1 beat=1
+dokku logs fantasy --tail
+```
+
+Redis must be configured via `REDIS_URL`. Confirm a new `espn.sync` audit and a
+`shadow_lineup` decision appear after the first interval. Disable scheduling with:
+
+```bash
+dokku run fantasy python manage.py configure_sync_schedule --disable
+```
+
+Disabling prevents future dispatches; a task already queued may finish.
+
+## Roadmap
+
+See [ROADMAP.md](ROADMAP.md) for completed phases, Phase 4 rollout tasks, and
+planned milestones.

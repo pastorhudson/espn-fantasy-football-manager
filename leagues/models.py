@@ -1,4 +1,5 @@
 from django.db import models
+from django.utils import timezone
 
 
 class League(models.Model):
@@ -79,3 +80,9 @@ class FreeAgentSnapshot(models.Model):
     # Store the bounded ESPN result and its limit; never imply this is the full pool.
     limit = models.PositiveIntegerField(default=100)
     data = models.JSONField(default=list)
+
+
+class SyncLease(models.Model):
+    key = models.CharField(max_length=80, primary_key=True)
+    token = models.UUIDField(null=True)
+    expires_at = models.DateTimeField(default=timezone.now)

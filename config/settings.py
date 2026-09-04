@@ -176,3 +176,7 @@ LOGGING = {
         "django.request": {"handlers": ["console"], "level": "WARNING", "propagate": False},
     },
 }
+
+SNAPSHOT_RETENTION_DAYS = env.int("SNAPSHOT_RETENTION_DAYS", default=30)
+if SNAPSHOT_RETENTION_DAYS < 1:
+    raise ImproperlyConfigured("SNAPSHOT_RETENTION_DAYS must be at least one.")
