@@ -173,3 +173,36 @@ def test_public_http_failures_are_sanitized(status, attempts):
 
 def test_missing_game_is_not_bye():
     assert game_context({"bye_week": 8, "games": {}}, 1, timezone.now())["state"] == "unknown"
+
+
+@pytest.mark.parametrize("placeholder", ["NA", "N/A", " na ", ""])
+def test_sleeper_placeholders_do_not_create_injury_warnings(snapshot, feeds, placeholder):
+    # The normalization must also apply to already-parsed, day-long cached feeds.
+    players = parse_players(feeds[1])
+    players["1"]["injury_status"] = placeholder
+    players["1"]["practice"] = placeholder
+    SourceCache.objects.create(key="sleeper-players", fetched_at=timezone.now(), data=players)
+    with patch("decisions.sources.client.fetch_json", side_effect=feeds[3]):
+        evidence = collect_context(snapshot)
+    player = evidence["players"][0]
+    assert player["mapping"] == "matched"
+    assert player["sleeper_injury"] is None
+    assert player["practice"] is None
+    assert not any("Sleeper reports" in warning for warning in evidence["warnings"])
+
+
+@pytest.mark.parametrize("reason", ["missing_id", "ambiguous", "defense"])
+def test_mapping_explanations(snapshot, feeds, reason):
+    if reason == "missing_id":
+        feeds[1]["1"]["espn_id"] = None
+        expected = "No matching ESPN ID in Sleeper data"
+    elif reason == "ambiguous":
+        feeds[1]["duplicate"] = feeds[1]["1"]
+        expected = "Multiple Sleeper players share this ESPN ID"
+    else:
+        Player.objects.filter(espn_id=1).update(espn_id=-7)
+        expected = "Team defense; no individual injury report"
+    with patch("decisions.sources.client.fetch_json", side_effect=feeds[3]):
+        evidence = collect_context(snapshot)
+    assert evidence["players"][0]["mapping_note"] == expected
+    assert evidence["players"][0]["sleeper_id"] is None

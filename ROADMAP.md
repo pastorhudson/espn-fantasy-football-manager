@@ -64,8 +64,11 @@ Budget: free sources only; no paid subscriptions. FantasyPros free-tier access
 is for sample/non-production data and is not used by this application. Paid
 FantasyPros and SportsDataIO integrations are deferred unless that constraint changes.
 
-Status: the initial free-source implementation is complete locally; production
-rollout remains pending. ESPN remains the sole numerical projection source.
+Status: initial free-source ingestion verified in production on September 4,
+2026. All three feeds were available, all 16 roster entries had scheduled
+kickoffs, and four trending adds matched the saved ESPN waiver sample. Sleeper
+roster matching remains partial (4 of 16 entries). ESPN remains the sole
+numerical projection source.
 
 - [x] Add free ESPN NFL schedule observations, explicit bye exclusions, and
       kickoff checks. Block on missing/conflicting schedules or started games;
@@ -81,8 +84,24 @@ rollout remains pending. ESPN remains the sole numerical projection source.
 - [x] Cache free feeds, bound retries, and record source outages without using
       expired cached data. Optional Sleeper failures preserve ESPN evaluation;
       schedule failures block it.
-- [ ] Deploy the migrations and verify a fresh scheduled decision with free-source
-      evidence. Older snapshots without observed NFL teams need a new ESPN sync.
+- [x] Deploy and verify a fresh decision with free-source evidence in production.
+      Older snapshots without observed NFL teams need a new ESPN sync.
+- [x] Investigate incomplete Sleeper matching: the public feed lacked ESPN IDs for
+      all 11 unmatched individual roster players; the remaining entry was a team
+      defense. The provider's reason for missing cross-references is unknown.
+- [x] Implement clearer missing/ambiguous ID, unavailable-feed, and team-defense
+      labels; treat `NA`/`N/A` as not reported without generating injury warnings.
+      These changes are local and passed 27 targeted tests plus lint.
+- [ ] Deploy the context-label and placeholder fixes; verify them on a fresh decision.
+- [ ] Evaluate a maintained, free ESPN-to-Sleeper ID crosswalk, checking production
+      usage terms, coverage, provenance, and refresh cadence. If no suitable source
+      exists, support explicitly reviewed ID mappings with recorded evidence.
+- [ ] Resolve mappings by stable IDs with conflict and duplicate checks; never
+      automatically join on names alone. The live feed contains two Kenneth
+      Walker records, demonstrating the risk of attaching another player's context.
+- [ ] Measure and display individual-player mapping coverage separately from feed
+      availability and team defenses. Validate roster and waiver matches, report
+      unresolved/conflicting IDs, and preserve mapping provenance in decision evidence.
 - [ ] Add reliable confirmed-inactive checks and validate ESPN roster-lock behavior
       before proposing changes around games that have started.
 - [ ] Identify a documented free production source for independent projections

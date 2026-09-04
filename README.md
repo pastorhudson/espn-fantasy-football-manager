@@ -209,7 +209,20 @@ Decision details show schedule checks, Sleeper injury/practice context, source
 retrieval times, and a waiver watch. Sleeper source-update times are not supplied
 by this adapter, so its injury information only produces review warnings and
 never overrides ESPN eligibility. Player matching uses explicit ESPN IDs; missing
-or ambiguous matches are skipped. Trending adds are matched only against the
+or ambiguous matches are skipped. Decision details distinguish missing ESPN-ID
+matches, duplicate IDs, unavailable player data, and team defenses (which have
+no individual injury report). Sleeper placeholders `NA` and `N/A` are displayed
+as "Not reported" and do not generate injury warnings. These changes apply to
+new decisions, including evaluations using existing cached player data.
+
+A public-feed check on September 4, 2026 confirmed missing ESPN IDs for Michael
+Wilson, Javonte Williams, Khalil Shakir, Jayden Daniels, Zay Flowers, Parker
+Washington, Kenneth Walker (Sleeper ID 8151), Will Reichard, Jacory Croskey-Merritt,
+Rachaad White, and De'Zhaun Stribling. Sleeper also contains a different Kenneth
+Walker (ID 4634) with an ESPN ID; name-only matching would risk incorrect context.
+Feed availability therefore does not establish complete player matching coverage.
+
+Trending adds are matched only against the
 saved, bounded ESPN free-agent/waiver sample. They are not add recommendations or
 a guarantee of current availability. An empty watch does not mean no free agents.
 

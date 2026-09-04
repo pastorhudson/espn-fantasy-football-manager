@@ -31,6 +31,13 @@ def parse_schedule(data):
     return result
 
 
+def reported_status(value):
+    """Treat provider placeholders as absent, including values in existing caches."""
+    if isinstance(value, str) and value.strip().upper() in {"", "NA", "N/A"}:
+        return None
+    return value
+
+
 def parse_players(data):
     if not isinstance(data, dict) or not data:
         raise ValueError
@@ -98,7 +105,7 @@ def collect_context(snapshot):
     rows = list(snapshot.slots.select_related("player").order_by("player__espn_id"))
     league = snapshot.team.league
     evidence = {
-        "version": "free-sources-v1", "evaluated_at": now.isoformat(),
+        "version": "free-sources-v2", "evaluated_at": now.isoformat(),
         "sources": [], "players": [], "waiver_trends": [], "warnings": [],
     }
     schedule_url = f"{SCHEDULE_BASE}{league.season}?view=proTeamSchedules_wl"
@@ -140,15 +147,30 @@ def collect_context(snapshot):
     for row in rows:
         matches = by_espn.get(row.player.espn_id, [])
         secondary = matches[0] if len(matches) == 1 else {}
+        if row.player.espn_id < 0:
+            mapping = "not applicable"
+            mapping_note = "Team defense; no individual injury report"
+        elif len(matches) > 1:
+            mapping = "ambiguous"
+            mapping_note = "Multiple Sleeper players share this ESPN ID"
+        elif not players:
+            mapping = "unavailable"
+            mapping_note = "Sleeper player feed unavailable"
+        elif not matches:
+            mapping = "unmapped"
+            mapping_note = "No matching ESPN ID in Sleeper data"
+        else:
+            mapping = "matched"
+            mapping_note = "Matched by ESPN ID"
         team = schedule.get(str(row.pro_team_id))
         item = {
             "player_id": row.player.espn_id, "name": row.player.name,
             "pro_team_id": row.pro_team_id, "espn_injury": row.injury_status,
             **game_context(team, snapshot.scoring_period, now),
             "sleeper_id": secondary.get("sleeper_id"),
-            "sleeper_injury": secondary.get("injury_status"),
-            "practice": secondary.get("practice"),
-            "mapping": "matched" if secondary else "unmapped or ambiguous",
+            "sleeper_injury": reported_status(secondary.get("injury_status")),
+            "practice": reported_status(secondary.get("practice")),
+            "mapping": mapping, "mapping_note": mapping_note,
         }
         evidence["players"].append(item)
         if item["sleeper_injury"]:
