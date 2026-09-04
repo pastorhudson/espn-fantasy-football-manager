@@ -181,7 +181,7 @@ def test_sleeper_placeholders_do_not_create_injury_warnings(snapshot, feeds, pla
     players = parse_players(feeds[1])
     players["1"]["injury_status"] = placeholder
     players["1"]["practice"] = placeholder
-    SourceCache.objects.create(key="sleeper-players", fetched_at=timezone.now(), data=players)
+    SourceCache.objects.create(key="sleeper-players-v2", fetched_at=timezone.now(), data=players)
     with patch("decisions.sources.client.fetch_json", side_effect=feeds[3]):
         evidence = collect_context(snapshot)
     player = evidence["players"][0]

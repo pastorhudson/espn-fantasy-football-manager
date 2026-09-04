@@ -146,7 +146,7 @@ def collect_context(snapshot):
     players = {}
     try:
         players, fetched = cached_feed(
-            "sleeper-players", "https://api.sleeper.app/v1/players/nfl", 1440, parse_players
+            "sleeper-players-v2", "https://api.sleeper.app/v1/players/nfl", 1440, parse_players
         )
         evidence["sources"].append({
             "name": "Sleeper players", "url": SLEEPER_DOCS, "status": "available",
