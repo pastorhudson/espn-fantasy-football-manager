@@ -1,9 +1,12 @@
 """Read-only MCP tools for discussing saved ESPN league data with ChatGPT."""
 
+from urllib.parse import urlparse
+
 from asgiref.sync import sync_to_async
 from django.conf import settings
 from mcp.server.auth.settings import AuthSettings, ClientRegistrationOptions
 from mcp.server.fastmcp import FastMCP
+from mcp.server.transport_security import TransportSecuritySettings
 from mcp.types import ToolAnnotations
 
 from .mcp_auth import DjangoOAuthProvider
@@ -17,6 +20,7 @@ from .models import TradeOffer
 from .trades import list_offer_evidence, offer_evidence
 
 provider = DjangoOAuthProvider()
+public_url = urlparse(settings.PUBLIC_BASE_URL)
 mcp = FastMCP(
     "Fantasy Football Manager",
     instructions=("Read pending ESPN trade offers and saved roster context. State "
@@ -29,6 +33,15 @@ mcp = FastMCP(
         client_registration_options=ClientRegistrationOptions(
             enabled=True, valid_scopes=["league:read"], default_scopes=["league:read"]
         ),
+    ),
+    transport_security=TransportSecuritySettings(
+        allowed_hosts=[public_url.netloc, "127.0.0.1:*", "localhost:*", "[::1]:*"],
+        allowed_origins=[
+            f"{public_url.scheme}://{public_url.netloc}",
+            "http://127.0.0.1:*",
+            "http://localhost:*",
+            "http://[::1]:*",
+        ],
     ),
     streamable_http_path="/mcp", stateless_http=True, json_response=True,
 )
