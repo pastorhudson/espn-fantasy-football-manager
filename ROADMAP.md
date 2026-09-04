@@ -48,6 +48,44 @@ enable ESPN writes.
 
 ## Later milestones — Scope recorded; phase numbering to be defined
 
+### Better decision inputs and evidence
+
+Prioritize availability checks and a second projection source before broader
+automation. Provider choices are candidates to evaluate, not purchased services
+or implemented integrations.
+
+- [ ] Add schedule, bye, kickoff, and confirmed inactive checks with source
+      timestamps and explicit handling of stale, missing, or conflicting data.
+      Validate ESPN roster-lock behavior separately before any write capability.
+- [ ] Evaluate [FantasyPros](https://www.fantasypros.com/api-data/) first for
+      independent projections, expert consensus rankings, and player-linked news.
+      Confirm API coverage, access terms, cost, and freshness before integration.
+- [ ] Evaluate [SportsDataIO](https://sportsdata.io/developers/workflow-guide/nfl)
+      as an alternative for availability, schedules, depth charts, projections,
+      and player-linked news; assess personal-use packages and real-data access.
+- [ ] Map provider player IDs to ESPN identities, and normalize projected
+      statistics to the league's scoring rules before comparing point totals.
+      Keep rankings distinct from numerical projections.
+- [ ] Compare ESPN and independent projections side by side, highlighting
+      disagreements. Measure accuracy before adopting a blended projection.
+- [ ] Show relevant news and availability warnings in decision details with
+      source links and publication/update times. Initially use news to prompt
+      review rather than automatically subtracting projected points.
+- [ ] Add [Sleeper](https://docs.sleeper.com/) trending adds/drops for waiver
+      discovery, checking candidates against actual ESPN league availability.
+- [ ] Explore [nflverse](https://nflreadr.nflverse.com/articles/nflverse_data_schedule.html)
+      performance history, snap counts, and depth charts for workload trends
+      and retrospective evaluation. Verify current dataset availability; do not
+      rely on its unavailable injury feed for live availability checks.
+- [ ] Add [National Weather Service](https://www.weather.gov/documentation/services-web-API)
+      forecasts and alerts for outdoor stadiums, accounting for game time and
+      roof status; surface warnings before introducing scoring adjustments.
+- [ ] Save the source observations, timestamps, and evaluator version behind
+      each decision. Compare predictions with actual results to assess whether
+      additional sources improve recommendations over the ESPN-only baseline.
+
+### Controlled execution and delivery
+
 - [ ] ESPN write validation, including game-lock checks before roster changes.
 - [ ] Policy enforcement and controlled roster-action execution.
 - [ ] Notifications for decisions, failures, and required manager action.
