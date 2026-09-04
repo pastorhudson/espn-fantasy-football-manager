@@ -115,7 +115,8 @@ off until the domain and all affected subdomains are ready for that commitment.
 The Procfile defines Gunicorn, Celery worker, and database-backed Celery beat.
 Install the opt-in schedule as described below. Run exactly one beat instance. The Dockerfile installs production dependencies from `uv.lock`. `app.json` runs
 migrations and static collection before deployment, starts one web, worker, and beat process,
-and checks database readiness. The web service has been verified on `fantasy.marvn.app`; Phase 4 still needs deployment.
+and checks database readiness. The web service, scheduled synchronization, and
+saved shadow decisions were verified on `fantasy.marvn.app` on September 4, 2026.
 
 ```bash
 uv run python manage.py migrate
@@ -129,6 +130,20 @@ database backups, and deployment secrets against the
 The old development secret has been removed from settings; never reuse it.
 
 ## Phase 4: shadow recommendations and scheduling
+
+### Sign in and review decisions
+
+Use `/accounts/login/` to sign in with an existing Django account (including
+your admin account). The home page links to sign-in, and successful login opens
+`/decisions/`. This page lists saved decisions, newest first; open a decision
+to see projections, lineup positions, proposed moves, and warnings.
+
+Superusers have access automatically. Other accounts need the Django
+`decisions.view_decision` permission, which grants access to all saved decisions
+in this single-manager application. There is no public account registration or
+per-team account ownership. Sign-out uses a CSRF-protected POST form.
+
+### Evaluate and schedule
 
 After deploying and migrating, evaluate an existing snapshot:
 
@@ -183,5 +198,5 @@ Disabling prevents future dispatches; a task already queued may finish.
 
 ## Roadmap
 
-See [ROADMAP.md](ROADMAP.md) for completed phases, Phase 4 rollout tasks, and
+See [ROADMAP.md](ROADMAP.md) for completed phases, Phase 4 verification, and
 planned milestones.

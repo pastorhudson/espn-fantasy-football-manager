@@ -18,8 +18,8 @@ Status: implemented; deployed web service and manual ESPN sync verified.
 
 ## Phase 4 — Scheduled synchronization and shadow recommendations
 
-Status: implemented and verified locally; deployment and scheduled-run
-verification remain pending. Local validation: 36 tests passing.
+Status: complete; deployed scheduled synchronization and shadow decision
+persistence verified on September 4, 2026. Local validation: 36 tests passing.
 
 - [x] Opt-in Celery beat schedule with configurable sync interval.
 - [x] Shared database lease for manual and scheduled syncs, with expiration
@@ -33,8 +33,14 @@ verification remain pending. Local validation: 36 tests passing.
 - [x] Snapshot retention that preserves decision evidence and latest observations.
 - [x] Failure audit entries and schedule enable/disable command.
 - [x] Deploy Phase 4 and apply its migration on Dokku.
-- [ ] Enable the schedule and start one worker and one beat process.
-- [ ] Verify a scheduled sync and shadow decision in the deployed application.
+- [x] Enable the schedule and start one worker and one beat process.
+- [x] Verify a scheduled sync and shadow decision in the deployed application.
+
+Production verification: the operator confirmed the enabled schedule and one each
+of web, worker, and beat. The worker completed `sync_and_recommend` at
+04:34:45 UTC on September 4, 2026, returning decision 1 with status `unchanged`.
+The admin showed that decision linked to roster snapshot 14, with shadow mode
+enabled, no proposed changes, a projected total of 115.78, and recorded warnings.
 
 Recommendations remain advisory. Game locks and bye status are unverified, and
 there is no ESPN write transport or executor. Autopilot and policy flags cannot
