@@ -1,0 +1,8 @@
+{% extends 'decisions/base.html' %}
+{% block content %}<p class="eyebrow">Lineup insights</p><h1>Your decisions.</h1><p class="muted">Saved evaluations, newest first. Open a decision to review its lineup and warnings.</p>
+{% include 'decisions/update.html' %}
+<div class="card">{% if decisions %}<div class="table-wrap"><table><thead><tr><th scope="col">Team / decision</th><th scope="col">Captured</th><th scope="col">Result</th><th scope="col" class="number">Projected</th></tr></thead><tbody>
+{% for decision in decisions %}<tr><td><a href="{% url 'decision-detail' decision.pk %}">{{ decision.team.name }} · #{{ decision.pk }}</a><br><small>{{ decision.team.league }}{% if decision.roster_snapshot %} · Week {{ decision.roster_snapshot.scoring_period }}{% endif %}</small></td><td>{{ decision.created_at|date:'M j, Y' }}<br><small>{{ decision.created_at|date:'g:i A T' }}</small></td><td><span class="badge">{{ decision.recommendation.status|default:'Unknown'|title }}</span></td><td class="number">{{ decision.recommendation.projected_total|floatformat:2|default:'—' }}</td></tr>{% endfor %}
+</tbody></table></div>{% else %}<h2>No decisions yet.</h2><p class="muted">Your first evaluation will appear here after a scheduled sync completes.</p>{% endif %}</div>
+{% if is_paginated %}<nav class="pagination" aria-label="Decision pages">{% if page_obj.has_previous %}<a href="?page={{ page_obj.previous_page_number }}">← Newer</a>{% endif %}<span class="muted">Page {{ page_obj.number }} of {{ paginator.num_pages }}</span>{% if page_obj.has_next %}<a href="?page={{ page_obj.next_page_number }}">Older →</a>{% endif %}</nav>{% endif %}
+{% endblock %}

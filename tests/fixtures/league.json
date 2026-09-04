@@ -1,0 +1,142 @@
+{
+  "id": 123,
+  "seasonId": 2026,
+  "scoringPeriodId": 1,
+  "status": {
+    "currentMatchupPeriod": 1
+  },
+  "settings": {
+    "name": "Example League",
+    "scoringSettings": {
+      "scoringType": "H2H_POINTS",
+      "scoringItems": [
+        {
+          "statId": 53,
+          "points": 1
+        }
+      ]
+    },
+    "scheduleSettings": {
+      "matchupPeriods": {
+        "1": [
+          1
+        ],
+        "2": [
+          2
+        ]
+      }
+    },
+    "acquisitionSettings": {
+      "isUsingAcquisitionBudget": true,
+      "acquisitionBudget": 100
+    }
+  },
+  "members": [
+    {
+      "id": "example-owner",
+      "displayName": "Example Owner"
+    }
+  ],
+  "teams": [
+    {
+      "id": 1,
+      "name": "Example Team",
+      "owners": [
+        "example-owner"
+      ],
+      "waiverRank": 3,
+      "transactionCounter": {
+        "acquisitionBudgetSpent": 7
+      },
+      "roster": {
+        "entries": [
+          {
+            "lineupSlotId": 0,
+            "playerPoolEntry": {
+              "player": {
+                "id": 101,
+                "fullName": "Example Quarterback",
+                "defaultPositionId": 1,
+                "proTeamId": 1,
+                "eligibleSlots": [
+                  0,
+                  20
+                ],
+                "injuryStatus": "QUESTIONABLE",
+                "stats": [
+                  {
+                    "seasonId": 2026,
+                    "scoringPeriodId": 0,
+                    "statSourceId": 1,
+                    "statSplitTypeId": 0,
+                    "appliedTotal": 300
+                  },
+                  {
+                    "seasonId": 2026,
+                    "scoringPeriodId": 1,
+                    "statSourceId": 1,
+                    "statSplitTypeId": 1,
+                    "appliedTotal": 19.5
+                  },
+                  {
+                    "seasonId": 2026,
+                    "scoringPeriodId": 1,
+                    "statSourceId": 0,
+                    "statSplitTypeId": 1,
+                    "appliedTotal": 0
+                  }
+                ]
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": 2,
+      "name": "Other Team",
+      "roster": {
+        "entries": [
+          {
+            "lineupSlotId": 16,
+            "playerPoolEntry": {
+              "player": {
+                "id": -16001,
+                "fullName": "Example Defense",
+                "defaultPositionId": 16,
+                "eligibleSlots": [
+                  16,
+                  20
+                ]
+              }
+            }
+          }
+        ]
+      }
+    }
+  ],
+  "schedule": [
+    {
+      "id": 1,
+      "matchupPeriodId": 1,
+      "home": {
+        "teamId": 1,
+        "totalPoints": 0
+      },
+      "away": {
+        "teamId": 2,
+        "totalPoints": 0
+      }
+    },
+    {
+      "id": 2,
+      "matchupPeriodId": 2,
+      "home": {
+        "teamId": 2
+      },
+      "away": {
+        "teamId": 1
+      }
+    }
+  ]
+}

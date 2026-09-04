@@ -1,0 +1,57 @@
+<section class="card" aria-label="Update league">
+  <h2>Refresh your league</h2>
+  <p id="update-status" role="status" aria-live="polite">{{ update_status.message }}</p>
+  {% if can_request_update %}
+  <form id="update-form" method="post" action="{% url 'decision-update' %}">
+    {% csrf_token %}
+    <button id="update-button" type="submit" {% if not update_status.can_update %}disabled{% endif %}>Update now</button>
+  </form>
+  {% else %}<p class="muted">An administrator can grant permission to request updates.</p>{% endif %}
+  <p><a id="updated-decision" {% if update_status.decision_id %}href="{% url 'decision-detail' update_status.decision_id %}"{% else %}hidden{% endif %}>View the latest update’s decision →</a></p>
+  <small>Updates the configured ESPN team. Queued and running updates are shared across all sessions.</small>
+</section>
+<style>button:disabled{opacity:.5;cursor:not-allowed}</style>
+{{ update_status|json_script:'initial-update-status' }}
+<script>
+(() => {
+  const initial = JSON.parse(document.getElementById('initial-update-status').textContent);
+  const button = document.getElementById('update-button');
+  const status = document.getElementById('update-status');
+  const form = document.getElementById('update-form');
+  const link = document.getElementById('updated-decision');
+  if (form) form.addEventListener('submit', () => {
+    button.disabled = true;
+    status.textContent = 'Requesting an update…';
+  });
+  async function poll() {
+    try {
+      const response = await fetch('{% url "decision-update-status" %}', {
+        headers: {'Accept': 'application/json'}, cache: 'no-store'
+      });
+      if (response.redirected || response.status === 403) {
+        if (button) button.disabled = true;
+        status.textContent = 'Your session has ended or access changed. Reload to sign in.';
+        return;
+      }
+      if (!response.ok) throw new Error('Status unavailable');
+      const current = await response.json();
+      if (button) button.disabled = !current.can_update;
+      status.textContent = current.message;
+      if (current.decision_id) {
+        link.href = '{% url "decision-list" %}' + current.decision_id + '/';
+        link.hidden = false;
+        if (current.decision_id !== initial.decision_id) {
+          // Reload the history after a successful background update.
+          window.location.reload();
+          return;
+        }
+      } else link.hidden = true;
+    } catch (_) {
+      if (button) button.disabled = true;
+      status.textContent = 'Could not check update status. Retrying shortly…';
+    }
+    window.setTimeout(poll, 5000);
+  }
+  window.setTimeout(poll, 5000);
+})();
+</script>

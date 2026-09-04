@@ -1,0 +1,25 @@
+{
+  "name": "fantasy",
+  "scripts": {
+    "dokku": {
+      "predeploy": "sh scripts/predeploy.sh"
+    }
+  },
+  "formation": {
+    "web": {"quantity": 1},
+    "worker": {"quantity": 1},
+    "beat": {"quantity": 1}
+  },
+  "healthchecks": {
+    "web": [
+      {
+        "type": "startup",
+        "name": "Django database readiness",
+        "command": ["python", "scripts/check_health.py"],
+        "attempts": 5,
+        "wait": 3,
+        "timeout": 10
+      }
+    ]
+  }
+}
