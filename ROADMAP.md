@@ -32,7 +32,7 @@ verification remain pending. Local validation: 36 tests passing.
 - [x] Flag injury concerns and zero projections; exclude unavailable and IR players.
 - [x] Snapshot retention that preserves decision evidence and latest observations.
 - [x] Failure audit entries and schedule enable/disable command.
-- [ ] Deploy Phase 4 and apply its migration on Dokku.
+- [x] Deploy Phase 4 and apply its migration on Dokku.
 - [ ] Enable the schedule and start one worker and one beat process.
 - [ ] Verify a scheduled sync and shadow decision in the deployed application.
 

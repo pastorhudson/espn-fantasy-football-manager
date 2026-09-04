@@ -114,7 +114,7 @@ off until the domain and all affected subdomains are ready for that commitment.
 
 The Procfile defines Gunicorn, Celery worker, and database-backed Celery beat.
 Install the opt-in schedule as described below. Run exactly one beat instance. The Dockerfile installs production dependencies from `uv.lock`. `app.json` runs
-migrations and static collection before deployment, starts only the web process,
+migrations and static collection before deployment, starts one web, worker, and beat process,
 and checks database readiness. The web service has been verified on `fantasy.marvn.app`; Phase 4 still needs deployment.
 
 ```bash
@@ -163,9 +163,14 @@ For the deployed Dokku app, after pushing the code and running migrations:
 
 ```bash
 dokku run fantasy python manage.py configure_sync_schedule --minutes 30
-dokku ps:scale fantasy web=1 worker=1 beat=1
+dokku ps:scale fantasy
 dokku logs fantasy --tail
 ```
+
+`app.json` controls process counts: deployment starts one web, worker, and beat
+process. `dokku ps:scale fantasy` displays those counts; changing counts through
+that command is disabled while `formation` is present. Edit `app.json` and
+redeploy to change them.
 
 Redis must be configured via `REDIS_URL`. Confirm a new `espn.sync` audit and a
 `shadow_lineup` decision appear after the first interval. Disable scheduling with:

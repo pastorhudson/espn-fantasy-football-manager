@@ -66,9 +66,12 @@ Only committed changes are pushed. The predeploy task applies migrations and
 collects static files once, before traffic switches. A startup check calls the
 container's HTTP health endpoint and verifies the database response.
 
-`app.json` initially runs one web process. Worker and beat stay at zero because
-scheduling is opt-in (see the Phase 4 section in README.md). Redis is required; when
-scheduled tasks are implemented, explicitly update formation and run one beat.
+`app.json` runs one web, one worker, and one beat process. Redis is required.
+Scheduling is opt-in (see the Phase 4 section in README.md). The `formation`
+configuration controls process counts and prevents manual scaling with
+`dokku ps:scale fantasy web=1 worker=1 beat=1`. Change quantities in `app.json`
+and redeploy when needed; keep exactly one beat process. Use
+`dokku ps:scale fantasy` without counts to inspect the deployed formation.
 
 After deployment, inspect ports; the Dockerfile exposes port 8000. Preserve any
 existing proxy/TLS mappings and ensure the public HTTP/HTTPS ports route to

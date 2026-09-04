@@ -7,8 +7,8 @@
   },
   "formation": {
     "web": {"quantity": 1},
-    "worker": {"quantity": 0},
-    "beat": {"quantity": 0}
+    "worker": {"quantity": 1},
+    "beat": {"quantity": 1}
   },
   "healthchecks": {
     "web": [
