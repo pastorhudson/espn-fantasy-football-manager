@@ -153,6 +153,7 @@ def _persist(
                 actual_points=points(player_data, client.season, period, 0),
                 injury_status=player.injury_status,
                 eligible_slots=player.eligible_slots,
+                pro_team_id=player.pro_team_id,
             )
     matchups = [item for item in data["schedule"] if item["matchupPeriodId"] == matchup_period]
     for item in matchups:

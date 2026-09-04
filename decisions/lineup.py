@@ -3,8 +3,10 @@
 import math
 from datetime import timedelta
 
+from django.conf import settings
 from django.db import transaction
 from django.utils import timezone
+from django.utils.dateparse import parse_datetime
 
 from decisions.models import Decision
 from leagues.models import RosterSnapshot
@@ -14,10 +16,17 @@ BENCH_SLOTS = {20, 21}
 UNAVAILABLE = {"OUT", "IR", "INJURY_RESERVE", "SUSPENSION", "SUSPENDED", "DOUBTFUL"}
 
 
-def evaluate(snapshot):
+def evaluate(snapshot, evidence=None):
     rows = list(snapshot.slots.select_related("player").order_by("player__espn_id"))
     warnings = ["Game locks and bye status are unverified; review in ESPN before any change."]
     result = {"status": "blocked", "warnings": warnings, "assignments": [], "changes": []}
+    result["evaluator_version"] = "lineup-v2"
+    result["lineup_rules"] = snapshot.team.league.settings.get("rosterSettings", {})
+    if evidence is not None:
+        evidence["evaluated_at"] = timezone.now().isoformat()
+        result["evidence"] = evidence
+        warnings[:] = ["ESPN roster locks and confirmed inactives remain unverified; review in ESPN."]
+        warnings.extend(evidence["warnings"])
     if snapshot.captured_at < timezone.now() - timedelta(hours=2):
         warnings.append("Roster snapshot is older than two hours.")
         return result
@@ -42,6 +51,30 @@ def evaluate(snapshot):
         if row.injury_status and row.injury_status != "ACTIVE":
             warnings.append(f"{row.player.name}: {row.injury_status}.")
     candidates = [r for r in rows if r.lineup_slot_id != 21 and r.injury_status not in UNAVAILABLE]
+    if evidence is not None:
+        contexts = {item["player_id"]: item for item in evidence["players"]}
+        blocked = False
+        # Conservatively stop after any roster player's kickoff. Optimizing around
+        # already-locked slots requires separate validation of ESPN lock rules.
+        for row in rows:
+            if row.lineup_slot_id == 21:
+                continue
+            context = contexts.get(row.player.espn_id, {})
+            state = context.get("state", "unknown")
+            if state == "scheduled":
+                kickoff = parse_datetime(context["kickoff"])
+                if kickoff <= timezone.now():
+                    state = "started"
+                    context["state"] = state
+            if state in ("unknown", "started"):
+                reason = "schedule is unknown" if state == "unknown" else "game has started"
+                warnings.append(f"{row.player.name}: {reason}; lineup evaluation blocked.")
+                blocked = True
+            elif state == "bye":
+                warnings.append(f"{row.player.name}: confirmed schedule bye; excluded from starters.")
+        if blocked:
+            return result
+        candidates = [r for r in candidates if contexts[r.player.espn_id]["state"] != "bye"]
     if any(
         r.projected_points is None
         or not math.isfinite(r.projected_points)
@@ -114,8 +147,20 @@ def evaluate(snapshot):
     return result
 
 
-@transaction.atomic
 def recommend_lineup(snapshot):
+    existing = Decision.objects.filter(roster_snapshot=snapshot, kind="shadow_lineup").first()
+    if existing:
+        return existing
+    evidence = None
+    if settings.FREE_DATA_ENABLED:
+        from decisions.sources.free import collect_context
+
+        evidence = collect_context(snapshot)
+    return _save_recommendation(snapshot, evidence)
+
+
+@transaction.atomic
+def _save_recommendation(snapshot, evidence):
     # Serialize repeated evaluations of the same observation.
     snapshot = (
         RosterSnapshot.objects.select_for_update()
@@ -125,7 +170,7 @@ def recommend_lineup(snapshot):
     existing = Decision.objects.filter(roster_snapshot=snapshot, kind="shadow_lineup").first()
     if existing:
         return existing
-    result = evaluate(snapshot)
+    result = evaluate(snapshot, evidence)
     decision = Decision.objects.create(
         team=snapshot.team,
         roster_snapshot=snapshot,

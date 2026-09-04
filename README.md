@@ -158,10 +158,48 @@ starter positions together (including flex). OUT, doubtful, suspended, and IR
 players are excluded; players in the IR roster slot are not promoted. Missing
 projections or eligibility, stale snapshots over two hours, and impossible lineups
 produce a blocked decision. Zero projections and injury designations are flagged.
-Game locks and bye status are not established by these snapshots, so every result
-requires review in ESPN. These are projection comparisons, not executable plans.
+Free schedule enrichment checks byes and kickoff times as described below.
+ESPN roster locks and confirmed inactives still require review in ESPN. These are projection comparisons, not executable plans.
 Policy flags cannot turn them into ESPN writes. Re-evaluating a snapshot returns
 its existing decision; sync again to get a fresh evaluation.
+
+### Free schedule and player context
+
+New decisions use free public ESPN NFL schedules and the documented Sleeper API
+by default (`FREE_DATA_ENABLED=true`). No API key or paid subscription is needed.
+ESPN remains the sole numerical projection source; no FantasyPros sample data is
+used. Sleeper is supplemental context, not a second projection model.
+
+The evaluator excludes explicit schedule byes. If any non-IR roster player's
+schedule is unknown, conflicting, or already past kickoff, the decision is
+blocked. This conservative behavior also applies to bench players: optimizing
+around locked slots is a later milestone. A missing game is not treated as a bye.
+Kickoff data does not establish ESPN roster-lock rules or confirmed inactives.
+
+Decision details show schedule checks, Sleeper injury/practice context, source
+retrieval times, and a waiver watch. Sleeper source-update times are not supplied
+by this adapter, so its injury information only produces review warnings and
+never overrides ESPN eligibility. Player matching uses explicit ESPN IDs; missing
+or ambiguous matches are skipped. Trending adds are matched only against the
+saved, bounded ESPN free-agent/waiver sample. They are not add recommendations or
+a guarantee of current availability. An empty watch does not mean no free agents.
+
+Public schedule responses are cached for 15 minutes, Sleeper players for one day,
+and trending adds for one hour. Expired cache entries are not reused after a
+failed refresh. Schedule failure blocks evaluation; Sleeper failure is recorded
+and leaves the ESPN-based evaluation available. Requests have bounded timeouts
+and retries. All source requests occur before the decision transaction and use
+no private ESPN cookies. Each decision retains its source evidence and evaluator
+version even when the shared cache changes.
+
+Deploy both new migrations before starting the updated processes. Then let the
+next scheduled ESPN sync create a fresh roster and decision. Existing decisions
+are unchanged; older roster slots have no historical NFL team ID and need a fresh
+sync for schedule checks. To disable enrichment and restore the original
+projection-only behavior, set `FREE_DATA_ENABLED=false` and restart the processes.
+
+Source references: [Sleeper API and noncommercial usage terms](https://docs.sleeper.com/),
+[ESPN schedule adapter reference](https://github.com/cwendt94/espn-api/blob/master/espn_api/requests/espn_requests.py).
 
 Enable the schedule explicitly (defaults to every 30 minutes, minimum five):
 

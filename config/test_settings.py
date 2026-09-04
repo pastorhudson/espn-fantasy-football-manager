@@ -14,3 +14,6 @@ STORAGES = {
 
 # Static assets are covered by the separate collectstatic validation.
 MIDDLEWARE = [item for item in MIDDLEWARE if item != "whitenoise.middleware.WhiteNoiseMiddleware"]  # noqa: F405
+
+# Individual feed tests enable this with mocked HTTP; the test suite stays offline.
+FREE_DATA_ENABLED = False

@@ -55,6 +55,8 @@ class RosterSlot(models.Model):
     actual_points = models.FloatField(null=True, blank=True)
     injury_status = models.CharField(max_length=40, blank=True)
     eligible_slots = models.JSONField(default=list)
+    # Preserve the NFL team observed at capture time; later trades must not rewrite evidence.
+    pro_team_id = models.PositiveSmallIntegerField(null=True, blank=True)
 
     class Meta:
         constraints = [

@@ -184,3 +184,6 @@ if SNAPSHOT_RETENTION_DAYS < 1:
 LOGIN_URL = "login"
 LOGIN_REDIRECT_URL = "decision-list"
 LOGOUT_REDIRECT_URL = "login"
+
+# Free, public feeds only. No API keys or subscriptions are required.
+FREE_DATA_ENABLED = env.bool("FREE_DATA_ENABLED", default=True)

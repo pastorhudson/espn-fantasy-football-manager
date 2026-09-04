@@ -42,37 +42,47 @@ of web, worker, and beat. The worker completed `sync_and_recommend` at
 The admin showed that decision linked to roster snapshot 14, with shadow mode
 enabled, no proposed changes, a projected total of 115.78, and recorded warnings.
 
-Recommendations remain advisory. Game locks and bye status are unverified, and
-there is no ESPN write transport or executor. Autopilot and policy flags cannot
+Phase 4 recommendations remain advisory. Its original evaluator did not verify
+game locks or bye status. There is no ESPN write transport or executor. Autopilot and policy flags cannot
 enable ESPN writes.
 
 ## Later milestones — Scope recorded; phase numbering to be defined
 
 ### Better decision inputs and evidence
 
-Prioritize availability checks and a second projection source before broader
-automation. Provider choices are candidates to evaluate, not purchased services
-or implemented integrations.
+Budget: free sources only; no paid subscriptions. FantasyPros free-tier access
+is for sample/non-production data and is not used by this application. Paid
+FantasyPros and SportsDataIO integrations are deferred unless that constraint changes.
 
-- [ ] Add schedule, bye, kickoff, and confirmed inactive checks with source
-      timestamps and explicit handling of stale, missing, or conflicting data.
-      Validate ESPN roster-lock behavior separately before any write capability.
-- [ ] Evaluate [FantasyPros](https://www.fantasypros.com/api-data/) first for
-      independent projections, expert consensus rankings, and player-linked news.
-      Confirm API coverage, access terms, cost, and freshness before integration.
-- [ ] Evaluate [SportsDataIO](https://sportsdata.io/developers/workflow-guide/nfl)
-      as an alternative for availability, schedules, depth charts, projections,
-      and player-linked news; assess personal-use packages and real-data access.
-- [ ] Map provider player IDs to ESPN identities, and normalize projected
-      statistics to the league's scoring rules before comparing point totals.
-      Keep rankings distinct from numerical projections.
-- [ ] Compare ESPN and independent projections side by side, highlighting
-      disagreements. Measure accuracy before adopting a blended projection.
-- [ ] Show relevant news and availability warnings in decision details with
-      source links and publication/update times. Initially use news to prompt
-      review rather than automatically subtracting projected points.
-- [ ] Add [Sleeper](https://docs.sleeper.com/) trending adds/drops for waiver
-      discovery, checking candidates against actual ESPN league availability.
+Status: the initial free-source implementation is complete locally; production
+rollout remains pending. ESPN remains the sole numerical projection source.
+
+- [x] Add free ESPN NFL schedule observations, explicit bye exclusions, and
+      kickoff checks. Block on missing/conflicting schedules or started games;
+      do not infer a bye from missing data or claim that ESPN locks are verified.
+- [x] Preserve each roster slot's observed NFL team for historical schedule checks.
+- [x] Match [Sleeper](https://docs.sleeper.com/) players by explicit ESPN IDs,
+      rejecting ambiguous matches; show injury/practice context with retrieval
+      timestamps and unknown source-update times clearly labeled.
+- [x] Add Sleeper trending adds for waiver discovery, intersected with the saved
+      ESPN free-agent/waiver sample. Preserve the observed status and sample time.
+- [x] Save bounded source evidence and evaluator version with each decision;
+      display schedule context, waiver watch, source status, and warnings.
+- [x] Cache free feeds, bound retries, and record source outages without using
+      expired cached data. Optional Sleeper failures preserve ESPN evaluation;
+      schedule failures block it.
+- [ ] Deploy the migrations and verify a fresh scheduled decision with free-source
+      evidence. Older snapshots without observed NFL teams need a new ESPN sync.
+- [ ] Add reliable confirmed-inactive checks and validate ESPN roster-lock behavior
+      before proposing changes around games that have started.
+- [ ] Identify a documented free production source for independent projections
+      and player-linked news. Confirm coverage, terms, and freshness first.
+- [ ] Normalize independent projected statistics to the league's scoring rules;
+      keep expert rankings distinct from numerical projections.
+- [ ] Compare independent projections against ESPN before adopting any blend.
+- [ ] Show player-linked news with publication times and source links; initially
+      prompt review rather than automatically subtracting projected points.
+- [ ] Extend Sleeper context with trending drops where useful.
 - [ ] Explore [nflverse](https://nflreadr.nflverse.com/articles/nflverse_data_schedule.html)
       performance history, snap counts, and depth charts for workload trends
       and retrospective evaluation. Verify current dataset availability; do not
@@ -80,9 +90,8 @@ or implemented integrations.
 - [ ] Add [National Weather Service](https://www.weather.gov/documentation/services-web-API)
       forecasts and alerts for outdoor stadiums, accounting for game time and
       roof status; surface warnings before introducing scoring adjustments.
-- [ ] Save the source observations, timestamps, and evaluator version behind
-      each decision. Compare predictions with actual results to assess whether
-      additional sources improve recommendations over the ESPN-only baseline.
+- [ ] Compare predictions with actual results to assess whether additional
+      sources improve recommendations over the ESPN-only baseline.
 
 ### Controlled execution and delivery
 

@@ -2,6 +2,14 @@ from django.core.validators import MinValueValidator
 from django.db import models
 
 
+class SourceCache(models.Model):
+    """Replaceable public feed cache. Decision evidence is saved separately."""
+
+    key = models.CharField(max_length=100, primary_key=True)
+    fetched_at = models.DateTimeField()
+    data = models.JSONField()
+
+
 class ManagerPolicy(models.Model):
     team = models.OneToOneField(
         "leagues.FantasyTeam", on_delete=models.CASCADE, related_name="policy"
