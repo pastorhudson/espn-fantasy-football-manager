@@ -15,7 +15,7 @@
       {
         "type": "startup",
         "name": "Django database readiness",
-        "command": "python scripts/check_health.py",
+        "command": ["python", "scripts/check_health.py"],
         "attempts": 5,
         "wait": 3,
         "timeout": 10
