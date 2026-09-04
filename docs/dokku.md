@@ -104,3 +104,53 @@ Production state belongs in the linked PostgreSQL service, not the container.
 References: [Dockerfile deployments](https://dokku.com/docs/deployment/builders/dockerfiles/),
 [predeploy tasks](https://dokku.com/docs/advanced-usage/deployment-tasks/),
 [startup checks](https://dokku.com/docs/deployment/zero-downtime-deploys/).
+
+## Replace legacy Docker links with a custom network
+
+For the existing `fantasy-db` and `fantasy-redis` services, create a shared
+network and persist their attachment settings. These server commands are a
+migration procedure, not confirmation that it has been applied. Stop if any
+command fails. If `fantasy-net` already exists, skip its creation.
+
+```sh
+dokku network:create fantasy-net
+dokku postgres:set fantasy-db post-create-network fantasy-net
+dokku redis:set fantasy-redis post-create-network fantasy-net
+```
+
+Attach the running service containers with the DNS aliases already used by their
+connection URLs. This avoids restarting PostgreSQL and Redis. The settings above
+preserve those attachments when the service containers are recreated.
+
+```sh
+sudo docker network connect --alias dokku-postgres-fantasy-db fantasy-net "$(dokku postgres:info fantasy-db --id)"
+sudo docker network connect --alias dokku-redis-fantasy-redis fantasy-net "$(dokku redis:info fantasy-redis --id)"
+dokku network:set fantasy attach-post-create fantasy-net
+```
+
+Remove only the legacy Docker options; do not use service `unlink`, which would
+also remove connection configuration. Rebuild the app to apply the changes to
+all process types.
+
+```sh
+dokku docker-options:remove fantasy build,deploy,run "--link dokku.postgres.fantasy-db:dokku-postgres-fantasy-db"
+dokku docker-options:remove fantasy build,deploy,run "--link dokku.redis.fantasy-redis:dokku-redis-fantasy-redis"
+dokku ps:rebuild fantasy
+```
+
+Verify database and Redis connectivity from a one-off app container:
+
+```sh
+dokku run fantasy python manage.py shell -c 'from django.db import connection; from django.conf import settings; import redis; connection.ensure_connection(); print("PostgreSQL OK"); print("Redis OK:", redis.Redis.from_url(settings.CELERY_BROKER_URL).ping())'
+dokku docker-options:report fantasy
+dokku network:report fantasy
+```
+
+The app should no longer have `--link` options or emit the default-bridge link
+warning. Existing proxy ports and connection URLs remain unchanged. Relinking a
+service later may recreate legacy options; inspect them if the warning returns.
+
+References: [Dokku networking](https://dokku.com/docs/networking/network/),
+[Docker options](https://dokku.com/docs/advanced-usage/docker-options/),
+[Postgres plugin](https://github.com/dokku/dokku-postgres),
+[Redis plugin](https://github.com/dokku/dokku-redis).
