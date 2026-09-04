@@ -48,6 +48,16 @@ enable ESPN writes.
 
 ## Later milestones — Scope recorded; phase numbering to be defined
 
+### On-demand updates
+
+- [x] Add an authenticated, permission-controlled **Update now** button that queues
+      Celery work and displays progress on the decisions page.
+- [x] Share a database enqueue gate with scheduled updates; reject repeated
+      requests, duplicate delivery, and expired tokens. Include imminent-schedule
+      checks, a completion/failure cooldown, and abandoned-job recovery.
+- [ ] Deploy the update reservation migration and verify a button-triggered update
+      alongside the existing beat schedule in production.
+
 ### Better decision inputs and evidence
 
 Budget: free sources only; no paid subscriptions. FantasyPros free-tier access

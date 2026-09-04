@@ -18,7 +18,7 @@ class Command(BaseCommand):
         task, _ = PeriodicTask.objects.update_or_create(
             name="ESPN shadow sync",
             defaults={
-                "task": "leagues.tasks.sync_and_recommend",
+                "task": "leagues.tasks.schedule_sync",
                 "interval": interval,
                 "crontab": None,
                 "solar": None,

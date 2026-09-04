@@ -10,6 +10,6 @@
 </head>
 <body><div class="wrap">
 <header><a class="brand" href="{% url 'home' %}">▰ Fantasy Football Manager</a><nav aria-label="Main navigation">{% if user.is_authenticated %}<a href="{% url 'decision-list' %}">Decisions</a><form method="post" action="{% url 'logout' %}">{% csrf_token %}<button class="link" type="submit">Sign out</button></form>{% else %}<a href="{% url 'login' %}">Sign in</a>{% endif %}</nav></header>
-<main>{% block content %}{% endblock %}</main>
+<main>{% if messages %}<div aria-live="polite">{% for message in messages %}<p class="card">{{ message }}</p>{% endfor %}</div>{% endif %}{% block content %}{% endblock %}</main>
 <footer>Advisory only. Review recommendations in ESPN before making changes.</footer>
 </div></body></html>

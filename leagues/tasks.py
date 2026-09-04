@@ -50,9 +50,26 @@ def prune_snapshots(league, days=30):
 
 
 @shared_task(ignore_result=True)
-def sync_and_recommend():
+def schedule_sync():
+    from leagues.dispatch import enqueue_update
+
+    return enqueue_update(check_schedule=False)
+
+
+@shared_task(ignore_result=True, soft_time_limit=660, time_limit=720)
+def sync_and_recommend(reservation=None):
+    from leagues.dispatch import finish_update, reserve_update, start_update
+
     if settings.ESPN_TEAM_ID <= 0:
         raise ESPNError("Set ESPN_TEAM_ID to your team's positive ESPN ID.")
+    # Compatibility for messages queued by the old beat schedule. They still
+    # enter the same gate before doing any external work.
+    if reservation is None:
+        reservation, status = reserve_update(check_schedule=False)
+        if reservation is None:
+            return {"status": "skipped", "reason": status["phase"]}
+    if not start_update(reservation):
+        return {"status": "skipped", "reason": "duplicate_or_expired"}
     try:
         with ESPNClient(
             settings.ESPN_LEAGUE_ID,
@@ -63,8 +80,10 @@ def sync_and_recommend():
             league, team, _ = sync_league(client, team_id=settings.ESPN_TEAM_ID)
         decision = recommend_lineup(team.roster_snapshots.first())
         prune_snapshots(league, settings.SNAPSHOT_RETENTION_DAYS)
+        finish_update(reservation, decision_id=decision.pk)
         return {"decision_id": decision.pk, "status": decision.recommendation["status"]}
     except Exception as exc:
+        finish_update(reservation, failed=True)
         # Exception bodies may contain credentials; persist only the exception type.
         AuditEvent.objects.create(kind="sync.failed", details={"error_type": type(exc).__name__})
         raise

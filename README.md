@@ -143,6 +143,35 @@ Superusers have access automatically. Other accounts need the Django
 in this single-manager application. There is no public account registration or
 per-team account ownership. Sign-out uses a CSRF-protected POST form.
 
+### Update now
+
+The decisions page has an **Update now** button. Superusers can use it immediately;
+other accounts need both `decisions.view_decision` and `leagues.request_sync`
+("Can request a league update"). The button sends a CSRF-protected POST and
+queues a Celery job for the configured ESPN league/team. It never fetches ESPN
+data in the web request. The page polls local status and refreshes when the new
+decision is ready.
+
+Web requests and the beat dispatcher share a database reservation per league and
+season. Only one queued or running update is allowed, including requests from
+different tabs or accounts. The button also waits when the configured interval
+schedule is due within a minute, for a short grace period around beat dispatch,
+or while a manual ESPN sync holds its lease. Every completion or failure has a
+one-minute cooldown. These checks are enforced server-side, not just by disabling
+the button.
+
+Queued reservations and their Celery messages expire after five minutes. Running
+reservations expire after fifteen minutes; the worker has an eleven-minute soft
+and twelve-minute hard time limit. This lets an abandoned job recover without
+allowing its expired token to run later. Broker failures invalidate an unclaimed
+reservation and throttle retries. If the worker has already claimed a message,
+an uncertain broker response does not release its running reservation.
+
+Deploy migration `leagues.0004_syncrequest` with the updated web, worker, and beat
+code. It redirects the existing "ESPN shadow sync" schedule to the shared
+dispatcher while preserving its enabled state and interval. No schedule reset is
+needed. Redis and a running Celery worker are required for button updates.
+
 ### Evaluate and schedule
 
 After deploying and migrating, evaluate an existing snapshot:

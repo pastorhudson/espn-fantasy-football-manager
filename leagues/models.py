@@ -88,3 +88,18 @@ class SyncLease(models.Model):
     key = models.CharField(max_length=80, primary_key=True)
     token = models.UUIDField(null=True)
     expires_at = models.DateTimeField(default=timezone.now)
+
+
+class SyncRequest(models.Model):
+    """One durable queue/running reservation per configured league and season."""
+
+    key = models.CharField(max_length=80, primary_key=True)
+    token = models.UUIDField(null=True)
+    status = models.CharField(max_length=12, default="idle")
+    requested_at = models.DateTimeField(null=True)
+    expires_at = models.DateTimeField(default=timezone.now)
+    cooldown_until = models.DateTimeField(default=timezone.now)
+    decision_id = models.PositiveBigIntegerField(null=True)
+
+    class Meta:
+        permissions = [("request_sync", "Can request a league update")]
