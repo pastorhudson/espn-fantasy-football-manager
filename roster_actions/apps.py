@@ -1,6 +1,6 @@
 from django.apps import AppConfig
 
 
-class TransactionsConfig(AppConfig):
+class RosterActionsConfig(AppConfig):
     default_auto_field = 'django.db.models.BigAutoField'
-    name = 'transactions'
+    name = 'roster_actions'
