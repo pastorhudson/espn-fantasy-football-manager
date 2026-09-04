@@ -92,7 +92,8 @@ numerical projection source.
 - [x] Implement clearer missing/ambiguous ID, unavailable-feed, and team-defense
       labels; treat `NA`/`N/A` as not reported without generating injury warnings.
       These changes are local and passed 27 targeted tests plus lint.
-- [ ] Deploy the context-label and placeholder fixes; verify them on a fresh decision.
+- [x] Deploy the context-label, placeholder, crosswalk, and coverage changes.
+      Production source verification found all 11 target mappings on September 4, 2026.
 - [x] Evaluate and integrate the GPL-3.0 DynastyProcess player-ID dataset, which is
       updated weekly and covered all 11 missing roster mappings in the September 4
       sample. Cache it weekly and preserve its source and retrieval time.
