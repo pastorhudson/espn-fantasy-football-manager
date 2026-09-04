@@ -38,7 +38,7 @@ class DjangoOAuthProvider:
         request_token = secrets.token_urlsafe(32)
         await McpOAuthGrant.objects.acreate(
             token_hash=token_hash(request_token), kind="request",
-            client_id=client.client_id, scopes=params.scopes or ["trades:read"],
+            client_id=client.client_id, scopes=params.scopes or ["league:read"],
             expires_at=timezone.now() + timedelta(minutes=10),
             data=params.model_dump(mode="json"),
         )

@@ -9,6 +9,19 @@ from starlette.testclient import TestClient
 
 from config.asgi import application
 from leagues.mcp_auth import DjangoOAuthProvider, approve_request
+from leagues.mcp_server import mcp
+
+
+def test_mcp_advertises_league_tools():
+    tools = async_to_sync(mcp.list_tools)()
+    assert {tool.name for tool in tools} == {
+        'get_league_rosters',
+        'get_my_roster',
+        'get_trade_offer',
+        'list_league_teams',
+        'list_player_projections',
+        'list_trade_offers',
+    }
 
 
 def test_mcp_discovery_and_private_endpoint():
@@ -16,7 +29,7 @@ def test_mcp_discovery_and_private_endpoint():
         auth = client.get('/.well-known/oauth-authorization-server').json()
         resource = client.get('/.well-known/oauth-protected-resource/mcp').json()
         assert auth['code_challenge_methods_supported'] == ['S256']
-        assert auth['scopes_supported'] == ['trades:read']
+        assert auth['scopes_supported'] == ['league:read']
         assert resource['resource'].endswith('/mcp')
         response = client.post('/mcp', json={
             'jsonrpc': '2.0', 'id': 1, 'method': 'initialize',
@@ -33,11 +46,11 @@ def test_oauth_authorization_code_flow(admin_user):
     client = OAuthClientInformationFull(
         client_id='chatgpt-test', client_secret='secret',
         redirect_uris=['https://chatgpt.com/aip/callback'],
-        token_endpoint_auth_method='client_secret_post', scope='trades:read',
+        token_endpoint_auth_method='client_secret_post', scope='league:read',
     )
     async_to_sync(provider.register_client)(client)
     params = AuthorizationParams(
-        state='state-1', scopes=['trades:read'], code_challenge='challenge',
+        state='state-1', scopes=['league:read'], code_challenge='challenge',
         redirect_uri='https://chatgpt.com/aip/callback',
         redirect_uri_provided_explicitly=True, resource='http://localhost:8000/mcp',
     )
@@ -50,5 +63,5 @@ def test_oauth_authorization_code_flow(admin_user):
     token = async_to_sync(provider.exchange_authorization_code)(client, code)
     access = async_to_sync(provider.load_access_token)(token.access_token)
     assert access.subject == str(admin_user.pk)
-    assert access.scopes == ['trades:read']
+    assert access.scopes == ['league:read']
     assert access.expires_at > time.time()

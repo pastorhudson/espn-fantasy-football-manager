@@ -1,4 +1,4 @@
-"""Read-only MCP tools for discussing saved trade offers with ChatGPT."""
+"""Read-only MCP tools for discussing saved ESPN league data with ChatGPT."""
 
 from asgiref.sync import sync_to_async
 from django.conf import settings
@@ -7,6 +7,12 @@ from mcp.server.fastmcp import FastMCP
 from mcp.types import ToolAnnotations
 
 from .mcp_auth import DjangoOAuthProvider
+from .mcp_data import (
+    league_rosters_data,
+    league_teams_data,
+    manager_roster_data,
+    player_projections_data,
+)
 from .models import TradeOffer
 from .trades import list_offer_evidence, offer_evidence
 
@@ -19,9 +25,9 @@ mcp = FastMCP(
     auth=AuthSettings(
         issuer_url=settings.PUBLIC_BASE_URL,
         resource_server_url=settings.MCP_RESOURCE_URL,
-        required_scopes=["trades:read"],
+        required_scopes=["league:read"],
         client_registration_options=ClientRegistrationOptions(
-            enabled=True, valid_scopes=["trades:read"], default_scopes=["trades:read"]
+            enabled=True, valid_scopes=["league:read"], default_scopes=["league:read"]
         ),
     ),
     streamable_http_path="/mcp", stateless_http=True, json_response=True,
@@ -47,3 +53,33 @@ async def get_trade_offer(offer_id: str) -> dict:
         return offer_evidence(offer) if offer else None
     offer = await sync_to_async(get)()
     return {"offer": offer, "found": offer is not None}
+
+
+def read_only_tool(title, description):
+    return mcp.tool(
+        title=title, description=description,
+        annotations=ToolAnnotations(readOnlyHint=True, destructiveHint=False, openWorldHint=False),
+    )
+
+
+@read_only_tool("Get my roster", "Get the manager's latest roster, lineup slots, projections, and injuries.")
+async def get_my_roster() -> dict:
+    return await sync_to_async(manager_roster_data)()
+
+
+@read_only_tool("List league teams", "List every team in the configured ESPN league.")
+async def list_league_teams() -> dict:
+    return await sync_to_async(league_teams_data)()
+
+
+@read_only_tool("Get league rosters", "Get the latest saved roster for every team in the ESPN league.")
+async def get_league_rosters() -> dict:
+    return await sync_to_async(league_rosters_data)()
+
+
+@read_only_tool(
+    "List player projections",
+    "List all ESPN projections available in the latest league rosters and bounded free-agent sample.",
+)
+async def list_player_projections() -> dict:
+    return await sync_to_async(player_projections_data)()

@@ -128,8 +128,9 @@ numerical projection source.
 - [ ] ESPN write validation, including game-lock checks before roster changes.
 - [ ] Policy enforcement and controlled roster-action execution.
 - [ ] Notifications for decisions, failures, and required manager action.
-- [x] Read-only OAuth-protected MCP access for listing and inspecting pending
-      trade offers in ChatGPT; no ESPN transaction tools are exposed.
+- [x] Read-only OAuth-protected MCP access for pending trades, the manager roster,
+      league teams and rosters, and available ESPN projections in ChatGPT; no
+      ESPN transaction tools are exposed.
 - [ ] Verify a real pending ESPN trade payload, ChatGPT OAuth connection, tool
       selection, and analysis in production.
 - [ ] Deployment rollout and verification of these capabilities.
