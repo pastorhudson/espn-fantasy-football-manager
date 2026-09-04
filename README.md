@@ -34,7 +34,7 @@ uv run python manage.py runserver
 
 `--check-auth` verifies access to the configured league without writing to the
 local database. Access to a public league does not prove that cookies are valid.
-Use `/admin/` to inspect models and `/health/` for a database readiness check.
+Use `/fantasy-backend/` to inspect models and `/health/` for a database readiness check.
 All domain administration is view-only in this milestone.
 
 The sync command prints the league, ESPN scoring type, selected roster, weekly
@@ -95,6 +95,9 @@ uv run python manage.py makemigrations --check --dry-run --settings=config.test_
 
 ## Production / Dokku preparation
 
+See [the deployment guide](docs/dokku.md) for the `fantasy` app on
+`fantasy.home`, including server setup, SSH access, TLS, and deployment commands.
+
 Set `DEBUG=false`, a random `SECRET_KEY` of at least 50 characters, explicit
 `ALLOWED_HOSTS`, `CSRF_TRUSTED_ORIGINS`, PostgreSQL `DATABASE_URL`, and Redis
 `REDIS_URL`. The application requires an explicit database URL outside debug
@@ -107,8 +110,9 @@ off until the domain and all affected subdomains are ready for that commitment.
 
 The Procfile defines Gunicorn, Celery worker, and database-backed Celery beat.
 No periodic sync or roster tasks are installed yet. Run one beat instance when
-scheduling is introduced. Configure the host build to install from `uv.lock`;
-this repository has not yet been deployed.
+scheduling is introduced. The Dockerfile installs production dependencies from `uv.lock`. `app.json` runs
+migrations and static collection before deployment, starts only the web process,
+and checks database readiness. This repository has not yet been deployed.
 
 ```bash
 uv run python manage.py migrate

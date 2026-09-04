@@ -1,0 +1,94 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Your home for ESPN fantasy football league snapshots and roster insights.">
+  <title>Fantasy Football Manager</title>
+  <style>
+    :root { color-scheme: dark; --bg: #101b16; --panel: #18271f; --text: #f4f4e9; --muted: #b0bcb1; --accent: #d4ee8c; --line: #354638; }
+    * { box-sizing: border-box; }
+    body { margin: 0; background: var(--bg); color: var(--text); font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; line-height: 1.6; }
+    a { color: inherit; }
+    .wrap { width: min(1080px, calc(100% - 48px)); margin: auto; }
+    header { display: flex; align-items: center; justify-content: space-between; gap: 20px; padding: 28px 0; border-bottom: 1px solid var(--line); }
+    .brand { font-size: 14px; font-weight: 750; letter-spacing: .06em; text-transform: uppercase; }
+    .brand span { color: var(--accent); margin-right: 10px; }
+    .status { display: inline-flex; align-items: center; gap: 8px; font-size: 12px; color: var(--accent); white-space: nowrap; }
+    .status::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: currentColor; }
+    main { padding: 76px 0 64px; }
+    .hero { display: grid; grid-template-columns: 1.4fr 1fr; gap: 72px; align-items: center; }
+    .eyebrow { color: var(--accent); font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: .16em; margin: 0 0 20px; }
+    h1 { font-size: clamp(42px, 6vw, 72px); line-height: 1.05; letter-spacing: -.05em; margin: 0 0 24px; font-weight: 750; }
+    h1 span { color: var(--accent); }
+    .intro { color: var(--muted); font-size: 17px; max-width: 450px; margin: 0 0 30px; }
+    .actions { display: flex; flex-wrap: wrap; align-items: center; gap: 14px; }
+    .button { display: inline-block; text-decoration: none; border: 1px solid var(--accent); border-radius: 6px; padding: 12px 20px; font-size: 14px; font-weight: 700; background: var(--accent); color: #152015; }
+    .button.secondary { background: transparent; color: var(--text); border-color: var(--line); }
+    .button:hover { filter: brightness(1.12); }
+    a:focus-visible { outline: 3px solid #fff; outline-offset: 5px; }
+    .field { aspect-ratio: 4 / 5; border: 1px solid #47634c; border-radius: 120px 120px 12px 12px; position: relative; overflow: hidden; background: repeating-linear-gradient(to bottom, transparent 0, transparent calc(20% - 1px), #47634c 20%), #213e2b; }
+    .field::before { content: ""; position: absolute; inset: 0 22%; border-left: 1px dashed #66856b; border-right: 1px dashed #66856b; }
+    .ball { position: absolute; top: 50%; left: 50%; width: 125px; height: 76px; border: 2px solid var(--accent); border-radius: 75% 20% 75% 20%; transform: translate(-50%, -50%) rotate(-25deg); background: #213e2b; }
+    .ball::after { content: ""; position: absolute; width: 58px; height: 14px; top: 28px; left: 31px; border-top: 2px solid var(--accent); background: repeating-linear-gradient(to right, transparent 0, transparent 10px, var(--accent) 10px, var(--accent) 12px); }
+    .field-label { position: absolute; bottom: 18px; left: 0; right: 0; text-align: center; font-size: 10px; letter-spacing: .25em; color: #d1ddce; text-transform: uppercase; }
+    .features { display: grid; grid-template-columns: repeat(3, 1fr); margin-top: 64px; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); }
+    .feature { padding: 28px 24px; }
+    .feature:first-child { padding-left: 0; }
+    .feature + .feature { border-left: 1px solid var(--line); }
+    .number { color: var(--accent); font-size: 12px; font-variant-numeric: tabular-nums; }
+    h2 { font-size: 18px; margin: 10px 0 8px; letter-spacing: -.02em; }
+    .feature p { font-size: 14px; color: var(--muted); margin: 0; }
+    footer { padding-bottom: 28px; color: var(--muted); font-size: 12px; display: flex; flex-wrap: wrap; justify-content: space-between; gap: 12px; }
+    @media (max-width: 700px) {
+      .wrap { width: calc(100% - 36px); }
+      header { padding: 22px 0; } .brand { font-size: 11px; }
+      main { padding: 48px 0 32px; }
+      .hero { grid-template-columns: 1fr; gap: 36px; }
+      .field { aspect-ratio: 2 / 1; border-radius: 12px; }
+      .features { grid-template-columns: 1fr; margin-top: 36px; }
+      .feature, .feature:first-child { padding: 22px 0; }
+      .feature + .feature { border-left: 0; border-top: 1px solid var(--line); }
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <div class="brand"><span aria-hidden="true">▰</span> Fantasy Football Manager</div>
+      <div class="status">Read-only access</div>
+    </header>
+    <main>
+      <section class="hero" aria-labelledby="welcome">
+        <div>
+          <p class="eyebrow">Your league. A clearer view.</p>
+          <h1 id="welcome">Know your roster.<br><span>Plan your next move.</span></h1>
+          <p class="intro">A home for your ESPN league snapshots, player projections, and weekly matchups. Start with the facts. Make every decision count.</p>
+          <nav class="actions" aria-label="Get started">
+            <a class="button secondary" href="{% url 'health' %}">Check service health</a>
+          </nav>
+        </div>
+        <div class="field" aria-hidden="true"><div class="ball"></div><div class="field-label">See the whole field</div></div>
+      </section>
+      <section class="features" aria-label="What you can explore">
+        <article class="feature">
+          <span class="number">01 / ROSTER</span>
+          <h2>Your team, captured.</h2>
+          <p>Review saved roster snapshots, player availability, and weekly projections.</p>
+        </article>
+        <article class="feature">
+          <span class="number">02 / LEAGUE</span>
+          <h2>The bigger picture.</h2>
+          <p>Explore synced matchups, league settings, and available-player snapshots.</p>
+        </article>
+        <article class="feature">
+          <span class="number">03 / CONTROL</span>
+          <h2>You call the plays.</h2>
+          <p>This version observes your league. It does not change your ESPN lineup or make transactions.</p>
+        </article>
+      </section>
+    </main>
+    <footer><span>Fantasy Football Manager · An independent project</span><span>League data is available after your first sync.</span></footer>
+  </div>
+</body>
+</html>
