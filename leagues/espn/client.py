@@ -69,7 +69,10 @@ class ESPNClient:
                     continue
                 raise ESPNError(f"ESPN is temporarily unavailable (HTTP {response.status_code}).")
             if response.status_code != 200:
-                raise ESPNError(f"ESPN request failed (HTTP {response.status_code}).")
+                raise ESPNError(
+                    f"ESPN request failed (HTTP {response.status_code}; "
+                    f"views={','.join(views)}; scoring_period={week})."
+                )
             try:
                 data = response.json()
             except ValueError:
@@ -118,7 +121,7 @@ class ESPNClient:
             week=week,
             filters={
                 "transactions": {
-                    "filterType": {"value": ["FREEAGENT", "WAIVER", "TRADE", "ROSTER"]}
+                    "filterType": {"value": ["FREEAGENT", "WAIVER", "TRADE_ACCEPT", "ROSTER"]}
                 }
             },
         )

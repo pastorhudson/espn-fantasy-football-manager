@@ -240,3 +240,39 @@ def test_snapshot_injury_remains_historical(payload):
         RosterSlot.objects.filter(player__espn_id=101).order_by("pk").first().injury_status
         == "QUESTIONABLE"
     )
+
+
+def test_transaction_filter_uses_supported_trade_type():
+    def handle(request):
+        filters = json.loads(request.headers["x-fantasy-filter"])
+        types = filters["transactions"]["filterType"]["value"]
+        # ESPN rejects the generic TRADE enum with HTTP 400.
+        supported = {"FREEAGENT", "WAIVER", "TRADE_ACCEPT", "ROSTER"}
+        if not set(types) <= supported:
+            return httpx.Response(400)
+        assert "TRADE_ACCEPT" in types
+        return httpx.Response(
+            200, json={"transactions": [{"id": "trade-1", "type": "TRADE_ACCEPT"}]}
+        )
+
+    with adapter(handle) as client:
+        assert client.transactions(week=1)[0]["type"] == "TRADE_ACCEPT"
+
+
+def test_bad_request_identifies_view_without_exposing_response_or_cookies():
+    calls = []
+
+    def handle(request):
+        calls.append(request)
+        return httpx.Response(400, text="secret-s2 secret-swid private-account-data")
+
+    with adapter(handle) as client:
+        with pytest.raises(ESPNError) as caught:
+            client.free_agents(week=1)
+    message = str(caught.value)
+    assert "HTTP 400" in message
+    assert "kona_player_info" in message
+    assert "scoring_period=1" in message
+    assert "secret" not in message
+    assert "private-account-data" not in message
+    assert len(calls) == 1
