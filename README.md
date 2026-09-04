@@ -208,8 +208,11 @@ Kickoff data does not establish ESPN roster-lock rules or confirmed inactives.
 Decision details show schedule checks, Sleeper injury/practice context, source
 retrieval times, and a waiver watch. Sleeper source-update times are not supplied
 by this adapter, so its injury information only produces review warnings and
-never overrides ESPN eligibility. Player matching uses explicit ESPN IDs; missing
-or ambiguous matches are skipped. Decision details distinguish missing ESPN-ID
+never overrides ESPN eligibility. Player matching uses explicit ESPN IDs. When Sleeper omits an ESPN ID, the
+weekly [DynastyProcess ID dataset](https://github.com/dynastyprocess/data) fills it
+through the Sleeper ID. Conflicting or ambiguous mappings are skipped, Sleeper's
+own IDs take priority, and each match records its source. Decision details report
+individual-player mapping coverage separately from team defenses and feed status. Decision details distinguish missing ESPN-ID
 matches, duplicate IDs, unavailable player data, and team defenses (which have
 no individual injury report). Sleeper placeholders `NA` and `N/A` are displayed
 as "Not reported" and do not generate injury warnings. These changes apply to

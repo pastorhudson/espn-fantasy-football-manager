@@ -1,14 +1,18 @@
 """Schedule safety and supplemental Sleeper context, saved with each decision."""
 
+import csv
+import io
 from datetime import UTC, datetime
 
+from django.conf import settings
 from django.utils import timezone
 
 from leagues.models import FreeAgentSnapshot
 
-from .client import SourceError, cached_feed
+from .client import SourceError, cached_feed, fetch_csv
 
 SLEEPER_DOCS = "https://docs.sleeper.com/"
+CROSSWALK_URL = "https://raw.githubusercontent.com/dynastyprocess/data/master/files/db_playerids.csv"
 SCHEDULE_BASE = "https://lm-api-reads.fantasy.espn.com/apis/v3/games/ffl/seasons/"
 
 
@@ -46,16 +50,30 @@ def parse_players(data):
         if not isinstance(player, dict):
             raise ValueError
         espn = player.get("espn_id")
-        if espn is None or str(espn) == "0":
-            continue
         result[str(sid)] = {
-            "espn_id": int(espn),
+            "espn_id": int(espn) if espn is not None and str(espn) not in {"", "0"} else None,
             "name": player.get("full_name") or " ".join(
                 str(player.get(key) or "") for key in ("first_name", "last_name")
             ).strip(),
             "injury_status": player.get("injury_status"),
             "practice": player.get("practice_participation"),
         }
+    return result
+
+
+def parse_crosswalk(data):
+    if not isinstance(data, str):
+        raise ValueError
+    reader = csv.DictReader(io.StringIO(data))
+    if not reader.fieldnames or not {"sleeper_id", "espn_id"} <= set(reader.fieldnames):
+        raise ValueError
+    result = {}
+    for row in reader:
+        sid, espn = row.get("sleeper_id"), row.get("espn_id")
+        if not sid or not espn or sid == "NA" or espn == "NA":
+            continue
+        pair = {"sleeper_id": str(sid), "espn_id": int(espn)}
+        result.setdefault(str(sid), []).append(pair)
     return result
 
 
@@ -140,10 +158,36 @@ def collect_context(snapshot):
             "status": "unavailable", "error": str(exc),
         })
         evidence["warnings"].append("Sleeper player context unavailable; ESPN projections retained.")
-    # Duplicate cross-references are ambiguous. Never guess by player name.
+    crosswalk = {}
+    if getattr(settings, "PLAYER_ID_CROSSWALK_ENABLED", True):
+        try:
+            crosswalk, fetched = cached_feed(
+                "dynastyprocess-player-ids", CROSSWALK_URL, 10080, parse_crosswalk, fetch_csv
+            )
+            evidence["sources"].append({
+                "name": "DynastyProcess player IDs", "url": CROSSWALK_URL,
+                "status": "available", "fetched_at": fetched.isoformat(),
+                "updated_at": "Weekly publisher schedule",
+            })
+        except SourceError as exc:
+            evidence["sources"].append({
+                "name": "DynastyProcess player IDs", "url": CROSSWALK_URL,
+                "status": "unavailable", "error": str(exc),
+            })
+
+    # Fill only missing IDs through unique stable-ID pairs. Never guess by name.
+    for sid, player in players.items():
+        pairs = crosswalk.get(sid, [])
+        ids = {pair["espn_id"] for pair in pairs}
+        if player["espn_id"] is None and len(ids) == 1:
+            player["espn_id"] = ids.pop()
+            player["mapping_source"] = "DynastyProcess player IDs"
+        elif player["espn_id"] is not None:
+            player["mapping_source"] = "Sleeper players"
     by_espn = {}
     for sid, player in players.items():
-        by_espn.setdefault(player["espn_id"], []).append({**player, "sleeper_id": sid})
+        if player["espn_id"] is not None:
+            by_espn.setdefault(player["espn_id"], []).append({**player, "sleeper_id": sid})
     for row in rows:
         matches = by_espn.get(row.player.espn_id, [])
         secondary = matches[0] if len(matches) == 1 else {}
@@ -161,7 +205,7 @@ def collect_context(snapshot):
             mapping_note = "No matching ESPN ID in Sleeper data"
         else:
             mapping = "matched"
-            mapping_note = "Matched by ESPN ID"
+            mapping_note = f"Matched by ESPN ID via {secondary['mapping_source']}"
         team = schedule.get(str(row.pro_team_id))
         item = {
             "player_id": row.player.espn_id, "name": row.player.name,
@@ -171,6 +215,7 @@ def collect_context(snapshot):
             "sleeper_injury": reported_status(secondary.get("injury_status")),
             "practice": reported_status(secondary.get("practice")),
             "mapping": mapping, "mapping_note": mapping_note,
+            "mapping_source": secondary.get("mapping_source"),
         }
         evidence["players"].append(item)
         if item["sleeper_injury"]:
@@ -178,6 +223,13 @@ def collect_context(snapshot):
                 f"{row.player.name}: Sleeper reports {item['sleeper_injury']} "
                 "(supplemental context; source update time unknown)."
             )
+
+    individuals = [item for item in evidence["players"] if item["mapping"] != "not applicable"]
+    matched = sum(item["mapping"] == "matched" for item in individuals)
+    evidence["mapping_coverage"] = {
+        "matched": matched, "eligible": len(individuals),
+        "unresolved": len(individuals) - matched,
+    }
 
     try:
         trends, fetched = cached_feed(

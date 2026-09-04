@@ -93,13 +93,13 @@ numerical projection source.
       labels; treat `NA`/`N/A` as not reported without generating injury warnings.
       These changes are local and passed 27 targeted tests plus lint.
 - [ ] Deploy the context-label and placeholder fixes; verify them on a fresh decision.
-- [ ] Evaluate a maintained, free ESPN-to-Sleeper ID crosswalk, checking production
-      usage terms, coverage, provenance, and refresh cadence. If no suitable source
-      exists, support explicitly reviewed ID mappings with recorded evidence.
-- [ ] Resolve mappings by stable IDs with conflict and duplicate checks; never
+- [x] Evaluate and integrate the GPL-3.0 DynastyProcess player-ID dataset, which is
+      updated weekly and covered all 11 missing roster mappings in the September 4
+      sample. Cache it weekly and preserve its source and retrieval time.
+- [x] Resolve mappings by stable IDs with conflict and duplicate checks; never
       automatically join on names alone. The live feed contains two Kenneth
       Walker records, demonstrating the risk of attaching another player's context.
-- [ ] Measure and display individual-player mapping coverage separately from feed
+- [x] Measure and display individual-player mapping coverage separately from feed
       availability and team defenses. Validate roster and waiver matches, report
       unresolved/conflicting IDs, and preserve mapping provenance in decision evidence.
 - [ ] Add reliable confirmed-inactive checks and validate ESPN roster-lock behavior

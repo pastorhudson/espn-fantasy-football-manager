@@ -206,3 +206,39 @@ def test_mapping_explanations(snapshot, feeds, reason):
         evidence = collect_context(snapshot)
     assert evidence["players"][0]["mapping_note"] == expected
     assert evidence["players"][0]["sleeper_id"] is None
+
+
+def test_crosswalk_fills_only_missing_sleeper_espn_ids(snapshot, feeds, settings):
+    settings.PLAYER_ID_CROSSWALK_ENABLED = True
+    feeds[1]["1"]["espn_id"] = None
+    crosswalk = "sleeper_id,espn_id,name\n1,1,Player 1\n2,999,Wrong override\n"
+    with (
+        patch("decisions.sources.client.fetch_json", side_effect=feeds[3]),
+        patch("decisions.sources.free.fetch_csv", return_value=crosswalk),
+    ):
+        evidence = collect_context(snapshot)
+    first, second = evidence["players"]
+    assert first["sleeper_id"] == "1"
+    assert first["mapping_source"] == "DynastyProcess player IDs"
+    assert second["sleeper_id"] == "2"
+    assert second["mapping_source"] == "Sleeper players"
+    assert evidence["sources"][2]["name"] == "DynastyProcess player IDs"
+
+
+def test_crosswalk_rejects_conflicting_pairs(snapshot, feeds, settings):
+    settings.PLAYER_ID_CROSSWALK_ENABLED = True
+    feeds[1]["1"]["espn_id"] = None
+    crosswalk = "sleeper_id,espn_id\n1,1\n1,2\n"
+    with (
+        patch("decisions.sources.client.fetch_json", side_effect=feeds[3]),
+        patch("decisions.sources.free.fetch_csv", return_value=crosswalk),
+    ):
+        evidence = collect_context(snapshot)
+    assert evidence["players"][0]["mapping"] == "unmapped"
+
+
+def test_mapping_coverage_excludes_team_defenses(snapshot, feeds):
+    Player.objects.filter(espn_id=1).update(espn_id=-7)
+    with patch("decisions.sources.client.fetch_json", side_effect=feeds[3]):
+        coverage = collect_context(snapshot)["mapping_coverage"]
+    assert coverage == {"matched": 1, "eligible": 1, "unresolved": 0}

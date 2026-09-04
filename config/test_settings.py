@@ -17,3 +17,5 @@ MIDDLEWARE = [item for item in MIDDLEWARE if item != "whitenoise.middleware.Whit
 
 # Individual feed tests enable this with mocked HTTP; the test suite stays offline.
 FREE_DATA_ENABLED = False
+
+PLAYER_ID_CROSSWALK_ENABLED = False
