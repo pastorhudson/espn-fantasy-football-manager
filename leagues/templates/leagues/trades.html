@@ -1,0 +1,7 @@
+{% extends 'decisions/base.html' %}
+{% block title %}Trade offers{% endblock %}
+{% block content %}<p class="eyebrow">Read-only ESPN observations</p><h1>Trade offers</h1>
+<p class="muted">Pending offers refresh with league updates. Analysis is advisory; act only in ESPN.</p>
+{% for offer in offers %}<section class="card"><h2>{{ offer.proposing_team|default:'Unknown team' }} · {{ offer.status }}</h2><p class="muted">Offer {{ offer.offer_id }} · observed {{ offer.observed_at }}</p>
+{% if offer.players %}<div class="table-wrap"><table><thead><tr><th>Player</th><th>From</th><th>To</th><th>Injury</th><th class="number">Projection</th></tr></thead><tbody>{% for player in offer.players %}<tr><td>{{ player.player_name }}</td><td>{{ player.from_team|default:'—' }}</td><td>{{ player.to_team|default:'—' }}</td><td>{{ player.injury_status|default:'Not reported' }}</td><td class="number">{{ player.projected_points|floatformat:2|default:'—' }}</td></tr>{% endfor %}</tbody></table></div>{% else %}<p>ESPN supplied no player items for this offer.</p>{% endif %}</section>
+{% empty %}<section class="card"><p>No pending trade offers were visible in the latest ESPN sync.</p></section>{% endfor %}{% endblock %}

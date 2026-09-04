@@ -30,6 +30,8 @@ SECRET_KEY = env("SECRET_KEY")
 if not SECRET_KEY:
     raise ImproperlyConfigured("Set SECRET_KEY to a unique random value.")
 ALLOWED_HOSTS = env.list("ALLOWED_HOSTS", default=["localhost", "127.0.0.1"] if DEBUG else [])
+PUBLIC_BASE_URL = env("PUBLIC_BASE_URL", default="http://localhost:8000")
+MCP_RESOURCE_URL = f"{PUBLIC_BASE_URL.rstrip('/')}/mcp"
 if not DEBUG and (len(SECRET_KEY) < 50 or SECRET_KEY.startswith("django-insecure-")):
     raise ImproperlyConfigured(
         "Production SECRET_KEY must be a random value of at least 50 characters."

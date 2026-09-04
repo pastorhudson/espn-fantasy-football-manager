@@ -1,5 +1,7 @@
 """Fetch first, then persist one complete observation atomically."""
 
+from datetime import UTC, datetime
+
 from django.db import transaction
 from django.utils import timezone
 
@@ -12,6 +14,7 @@ from leagues.models import (
     RosterSlot,
     RosterSnapshot,
     SyncLease,
+    TradeOffer,
 )
 from players.models import Player
 from roster_actions.models import AuditEvent
@@ -80,6 +83,7 @@ def _fetch(client, *, team_id, week, free_agent_limit, lease):
                 raise ESPNError("ESPN team response is missing a roster; no data was saved.")
         free_agents = client.free_agents(week=period, limit=free_agent_limit)
         transactions = client.transactions(week=period)
+        pending_transactions = client.pending_transactions(week=period)
         return _persist(
             client,
             data,
@@ -88,6 +92,7 @@ def _fetch(client, *, team_id, week, free_agent_limit, lease):
             team_id,
             free_agents,
             transactions,
+            pending_transactions,
             free_agent_limit,
             lease,
         )
@@ -99,7 +104,8 @@ def _fetch(client, *, team_id, week, free_agent_limit, lease):
 
 @transaction.atomic
 def _persist(
-    client, data, period, matchup_period, team_id, free_agents, transactions, limit, lease
+    client, data, period, matchup_period, team_id, free_agents, transactions,
+    pending_transactions, limit, lease
 ):
     key, token = lease
     held = SyncLease.objects.select_for_update().get(key=key)
@@ -169,6 +175,33 @@ def _persist(
     FreeAgentSnapshot.objects.create(
         league=league, scoring_period=period, limit=limit, data=free_agents
     )
+    active_offer_ids = set()
+    for offer in pending_transactions:
+        offer_id = str(offer["id"])
+        active_offer_ids.add(offer_id)
+        process_ms = offer.get("processDate")
+        process_at = (
+            datetime.fromtimestamp(process_ms / 1000, tz=UTC)
+            if isinstance(process_ms, (int, float)) and not isinstance(process_ms, bool)
+            else None
+        )
+        TradeOffer.objects.update_or_create(
+            league=league,
+            espn_id=offer_id,
+            defaults={
+                "status": str(offer.get("status") or "PENDING"),
+                "proposing_team": FantasyTeam.objects.filter(
+                    league=league, espn_id=offer.get("teamId")
+                ).first(),
+                "scoring_period": period,
+                "process_at": process_at,
+                "active": True,
+                "data": offer,
+            },
+        )
+    TradeOffer.objects.filter(league=league, active=True).exclude(
+        espn_id__in=active_offer_ids
+    ).update(active=False)
     AuditEvent.objects.create(
         league=league,
         kind="espn.sync",
@@ -177,6 +210,7 @@ def _persist(
             "team_count": len(data["teams"]),
             "free_agent_count": len(free_agents),
             "transactions": transactions,
+            "pending_trade_count": len(pending_transactions),
         },
     )
     return league, selected, matchups

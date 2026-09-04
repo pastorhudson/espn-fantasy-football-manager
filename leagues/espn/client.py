@@ -130,3 +130,10 @@ class ESPNClient:
         if not isinstance(result, list):
             raise ESPNError("ESPN returned invalid transaction data.")
         return result
+
+    def pending_transactions(self, *, week):
+        data = self._get(["mPendingTransactions"], week=week)
+        result = data.get("pendingTransactions", [])
+        if not isinstance(result, list) or not all(isinstance(row, dict) for row in result):
+            raise ESPNError("ESPN returned invalid pending trade data.")
+        return [row for row in result if row.get("type") in {"TRADE", "TRADE_PROPOSAL"}]

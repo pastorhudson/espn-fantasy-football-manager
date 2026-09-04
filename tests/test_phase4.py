@@ -145,7 +145,7 @@ def test_expired_sync_cannot_persist():
             expires_at=timezone.now() - timedelta(seconds=1)
         )
         with pytest.raises(ESPNError, match="expired"):
-            _persist(None, {}, 1, 1, 1, [], [], 100, lease)
+            _persist(None, {}, 1, 1, 1, [], [], [], 100, lease)
     assert not League.objects.exists()
 
 

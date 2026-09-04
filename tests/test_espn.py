@@ -18,6 +18,7 @@ from leagues.models import (
     MatchupSnapshot,
     RosterSlot,
     RosterSnapshot,
+    TradeOffer,
 )
 from players.models import Player
 from roster_actions.models import AuditEvent
@@ -65,6 +66,8 @@ def response_handler(payload, calls):
             )
         if "mTransactions2" in views:
             return httpx.Response(200, json={"transactions": []})
+        if "mPendingTransactions" in views:
+            return httpx.Response(200, json={"pendingTransactions": []})
         return httpx.Response(200, json=payload)
 
     return handle
@@ -154,7 +157,34 @@ def test_sync_creates_history_and_preserves_preferences(payload):
     assert ManagerPolicy.objects.get(team=team).max_weekly_adds == 4
     assert not team.policy.autopilot_enabled
     assert team.policy.shadow_mode
-    assert len(calls) == 6
+    assert len(calls) == 8
+
+
+@pytest.mark.django_db
+def test_pending_trade_is_saved_and_later_closed(payload):
+    pending = [{
+        "id": "offer-1", "type": "TRADE", "status": "PENDING", "teamId": 2,
+        "scoringPeriodId": 1, "processDate": 1788560000000,
+        "items": [
+            {"playerId": 101, "type": "ADD", "fromTeamId": 1, "toTeamId": 2},
+            {"playerId": 201, "type": "DROP", "fromTeamId": 2, "toTeamId": 1},
+        ],
+    }]
+
+    def handle(request):
+        views = request.url.params.get_list("view")
+        if "mPendingTransactions" in views:
+            return httpx.Response(200, json={"pendingTransactions": pending})
+        return response_handler(payload, [])(request)
+
+    with adapter(handle) as client:
+        sync_league(client, team_id=1)
+        offer = TradeOffer.objects.get(espn_id="offer-1")
+        assert offer.active and offer.proposing_team.espn_id == 2
+        pending.clear()
+        sync_league(client, team_id=1)
+    offer.refresh_from_db()
+    assert not offer.active
 
 
 @pytest.mark.django_db
@@ -257,6 +287,15 @@ def test_transaction_filter_uses_supported_trade_type():
 
     with adapter(handle) as client:
         assert client.transactions(week=1)[0]["type"] == "TRADE_ACCEPT"
+
+
+def test_pending_transactions_keep_only_trades():
+    rows = [
+        {"id": "trade", "type": "TRADE", "status": "PENDING"},
+        {"id": "waiver", "type": "WAIVER", "status": "PENDING"},
+    ]
+    with adapter(lambda _: httpx.Response(200, json={"pendingTransactions": rows})) as client:
+        assert client.pending_transactions(week=1) == rows[:1]
 
 
 def test_bad_request_identifies_view_without_exposing_response_or_cookies():

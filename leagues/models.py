@@ -84,6 +84,46 @@ class FreeAgentSnapshot(models.Model):
     data = models.JSONField(default=list)
 
 
+class TradeOffer(models.Model):
+    """Latest observation of an ESPN pending trade; never used to write to ESPN."""
+
+    league = models.ForeignKey(League, on_delete=models.CASCADE, related_name="trade_offers")
+    espn_id = models.CharField(max_length=100)
+    status = models.CharField(max_length=40, default="PENDING")
+    proposing_team = models.ForeignKey(
+        FantasyTeam, on_delete=models.SET_NULL, null=True, blank=True,
+        related_name="proposed_trade_offers",
+    )
+    scoring_period = models.PositiveSmallIntegerField(default=0)
+    process_at = models.DateTimeField(null=True, blank=True)
+    observed_at = models.DateTimeField(auto_now=True)
+    active = models.BooleanField(default=True)
+    data = models.JSONField(default=dict)
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(fields=["league", "espn_id"], name="unique_trade_offer")
+        ]
+        ordering = ["-observed_at", "-pk"]
+
+
+class McpOAuthClient(models.Model):
+    client_id = models.CharField(max_length=100, primary_key=True)
+    metadata = models.JSONField(default=dict)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+
+class McpOAuthGrant(models.Model):
+    token_hash = models.CharField(max_length=64, unique=True)
+    kind = models.CharField(max_length=12)
+    client = models.ForeignKey(McpOAuthClient, on_delete=models.CASCADE)
+    user = models.ForeignKey("auth.User", on_delete=models.CASCADE, null=True, blank=True)
+    scopes = models.JSONField(default=list)
+    expires_at = models.DateTimeField()
+    data = models.JSONField(default=dict)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+
 class SyncLease(models.Model):
     key = models.CharField(max_length=80, primary_key=True)
     token = models.UUIDField(null=True)

@@ -283,3 +283,26 @@ Disabling prevents future dispatches; a task already queued may finish.
 
 See [ROADMAP.md](ROADMAP.md) for completed phases, Phase 4 verification, and
 planned milestones.
+
+### Pending trades and ChatGPT MCP
+
+Each ESPN sync reads the private `mPendingTransactions` view and saves pending
+trade offers separately from completed league activity. `/trades/` displays the
+latest active offers with resolved team and player names, ESPN projections, and
+injury status. Missing offers are treated as an empty observation; offers that
+disappear on a later successful sync are retained as inactive history.
+
+The deployment exposes a read-only, OAuth-protected MCP server at
+`https://fantasy.marvn.app/mcp`. It provides `list_trade_offers` and
+`get_trade_offer`; neither tool can write to ESPN. Set the canonical external URL
+before deployment:
+
+```sh
+dokku config:set --no-restart fantasy PUBLIC_BASE_URL=https://fantasy.marvn.app
+```
+
+To connect it in ChatGPT, enable Developer mode under **Settings → Security and
+login**, add an MCP connection using `https://fantasy.marvn.app/mcp`, sign in to
+the manager, and authorize the `trades:read` scope. Then ask, for example,
+“Analyze my pending fantasy trade offers.” The connection sends the saved offer
+and roster evidence to ChatGPT. Confirm the live offer and act only in ESPN.
