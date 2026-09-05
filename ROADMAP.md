@@ -103,8 +103,25 @@ numerical projection source.
 - [x] Measure and display individual-player mapping coverage separately from feed
       availability and team defenses. Validate roster and waiver matches, report
       unresolved/conflicting IDs, and preserve mapping provenance in decision evidence.
-- [ ] Add reliable confirmed-inactive checks and validate ESPN roster-lock behavior
-      before proposing changes around games that have started.
+- [x] Identify the league's configured lineup-lock rule: **Lock individually at
+      Scheduled Gametime**. The operator supplied CBC Fantasy League 2026 settings
+      on September 5, 2026; Lineup Protection is off.
+- [x] Establish documented lineup-lock behavior from the operator-supplied ESPN
+      Knowledge Base article, **Lineup Lock Times**: each player locks at scheduled
+      kickoff for active-slot and active/bench moves; players with later games
+      remain movable. Article URL has not yet been supplied. This establishes the
+      documented rule, not live verification or bench-player drop permissions.
+- [ ] Implement and test individual lineup locks: preserve locked players in
+      their observed slots and optimize eligible unlocked players around them,
+      replacing the current blanket block after any non-IR roster player's kickoff.
+      Retain conservative blocking for missing/conflicting schedule evidence.
+      The supplied documentation is sufficient to begin implementation.
+- [ ] Verify implemented lock handling against ESPN after kickoff and in production.
+      Keep this verification distinct from the documented league setting.
+- [ ] Identify and integrate a reliable confirmed-inactive source with stable player
+      and game identities, publication/update times, source links, and verified free
+      production access. Distinguish confirmed game-day inactives from injury
+      designations; validate freshness and missing-data behavior before relying on it.
 - [ ] Identify a documented free production source for independent projections
       and player-linked news. Confirm coverage, terms, and freshness first.
 - [ ] Normalize independent projected statistics to the league's scoring rules;

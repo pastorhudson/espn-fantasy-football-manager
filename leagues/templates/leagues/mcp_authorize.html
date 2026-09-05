@@ -1,5 +1,5 @@
 {% extends 'decisions/base.html' %}
 {% block title %}Connect ChatGPT{% endblock %}
 {% block content %}<section class="card login"><p class="eyebrow">Read-only connection</p><h1>Connect ChatGPT</h1>
-<p>ChatGPT will be able to read saved ESPN trade offers, player projections, injury status, and team names. It cannot accept, reject, counter, or create transactions.</p>
+<p>ChatGPT will be able to read saved ESPN pickups, drops, trades, pending trade offers, player projections, injury status, and team names. It cannot accept, reject, counter, or create transactions.</p>
 <form method="post">{% csrf_token %}<input type="hidden" name="request" value="{{ request_token }}"><button type="submit">Authorize trade access</button></form></section>{% endblock %}

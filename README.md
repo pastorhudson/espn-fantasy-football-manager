@@ -328,3 +328,9 @@ The authenticated, read-only MCP endpoint also exposes:
 
 Omitting the week selects the latest synced scoring period. Results include
 observation timestamps and explicit schedule/lineup availability.
+
+- `get_league_transactions(team_id=None, player_id=None, limit=50)`: saved pickups,
+  drops, and trades with player names, sending/receiving teams, ESPN status, and
+  timestamps. Returns newest first, deduplicates repeated sync observations, and
+  supports limits from 1 to 200. Filters preserve all players in a matching trade.
+  Coverage is limited to saved sync history; no database migration is needed.

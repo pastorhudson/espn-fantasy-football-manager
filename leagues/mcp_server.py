@@ -19,12 +19,13 @@ from .mcp_data import (
 )
 from .models import TradeOffer
 from .trades import list_offer_evidence, offer_evidence
+from .transactions import league_transactions_data
 
 provider = DjangoOAuthProvider()
 public_url = urlparse(settings.PUBLIC_BASE_URL)
 mcp = FastMCP(
     "Fantasy Football Manager",
-    instructions=("Read saved ESPN matchups, schedules, starting lineups, and trade offers. State "
+    instructions=("Read saved ESPN matchups, schedules, starting lineups, transactions, and trade offers. State "
                   "uncertainty and remind the manager to act in ESPN."),
     auth_server_provider=provider,
     auth=AuthSettings(
@@ -112,3 +113,15 @@ async def get_league_matchups(week: int | None = None) -> dict:
 @read_only_tool("Get league schedule", "Get the saved season schedule, optionally filtered by ESPN team ID. Open sides may be byes or undecided opponents. Future schedules may change.")
 async def get_league_schedule(team_id: int | None = None) -> dict:
     return await sync_to_async(schedule_data)(team_id)
+
+
+@read_only_tool(
+    "Get league transactions",
+    "Get saved pickups, drops, and trades, newest first, with player names, sending and receiving "
+    "teams, ESPN status, and timestamps. Optional ESPN team/player IDs filter whole transactions. "
+    "Limit is 1–200. History covers saved sync observations; pending offers use list_trade_offers.",
+)
+async def get_league_transactions(
+    team_id: int | None = None, player_id: int | None = None, limit: int = 50,
+) -> dict:
+    return await sync_to_async(league_transactions_data)(team_id, player_id, limit)
