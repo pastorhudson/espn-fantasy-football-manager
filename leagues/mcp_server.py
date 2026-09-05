@@ -9,6 +9,7 @@ from mcp.server.fastmcp import FastMCP
 from mcp.server.transport_security import TransportSecuritySettings
 from mcp.types import ToolAnnotations
 
+from .matchups import matchups_data, my_matchup_data, schedule_data
 from .mcp_auth import DjangoOAuthProvider
 from .mcp_data import (
     league_rosters_data,
@@ -23,7 +24,7 @@ provider = DjangoOAuthProvider()
 public_url = urlparse(settings.PUBLIC_BASE_URL)
 mcp = FastMCP(
     "Fantasy Football Manager",
-    instructions=("Read pending ESPN trade offers and saved roster context. State "
+    instructions=("Read saved ESPN matchups, schedules, starting lineups, and trade offers. State "
                   "uncertainty and remind the manager to act in ESPN."),
     auth_server_provider=provider,
     auth=AuthSettings(
@@ -96,3 +97,18 @@ async def get_league_rosters() -> dict:
 )
 async def list_player_projections() -> dict:
     return await sync_to_async(player_projections_data)()
+
+
+@read_only_tool("Get my matchup", "Get the manager's opponent and both saved starting lineups for a scoring week. Defaults to the latest synced week; missing lineups are explicit.")
+async def get_my_matchup(week: int | None = None) -> dict:
+    return await sync_to_async(my_matchup_data)(week)
+
+
+@read_only_tool("Get league matchups", "Get all matchups and saved starting lineups for a scoring week. Scores are matchup-period totals, which may span several weeks.")
+async def get_league_matchups(week: int | None = None) -> dict:
+    return await sync_to_async(matchups_data)(week)
+
+
+@read_only_tool("Get league schedule", "Get the saved season schedule, optionally filtered by ESPN team ID. Open sides may be byes or undecided opponents. Future schedules may change.")
+async def get_league_schedule(team_id: int | None = None) -> dict:
+    return await sync_to_async(schedule_data)(team_id)

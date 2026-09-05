@@ -1,0 +1,33 @@
+{% extends 'decisions/base.html' %}
+{% block title %}Matchups & schedule{% endblock %}
+{% block content %}
+<p class="eyebrow">Saved ESPN league data</p>
+<h1>Matchups & schedule</h1>
+<p class="muted">{{ schedule.league|default:"No league synced yet" }} · Last league sync: {{ schedule.observed_at|default:"Not available" }}</p>
+<form method="get"><label for="week">Scoring week</label><input id="week" name="week" type="number" min="0" value="{{ matchups.scoring_period }}"><button type="submit">Show week</button></form>
+<h2>Your matchup · Week {{ matchups.scoring_period }}</h2>
+{% for matchup in mine.matchups %}
+<section class="card">
+<h2>{{ matchup.home.team_name|default:"Open opponent" }} vs {{ matchup.away.team_name|default:"Open opponent" }}</h2>
+{% if matchup.has_open_side %}<p>One side is open: a bye or an opponent ESPN has not assigned yet.</p>{% endif %}
+<p>Matchup-period score: {{ matchup.home.total_points|floatformat:2|default:"—" }} – {{ matchup.away.total_points|floatformat:2|default:"—" }}</p>
+{% include 'leagues/matchup_lineup.html' with side=matchup.home %}
+{% include 'leagues/matchup_lineup.html' with side=matchup.away %}
+</section>
+{% empty %}<section class="card">No saved matchup for your team in this week. Update league data from <a href="{% url 'decision-list' %}">Decisions</a>.</section>{% endfor %}
+<h2>League matchups</h2>
+<p class="muted">Scores cover the whole matchup period, which can span multiple weeks. Projections below cover only the selected scoring week.</p>
+{% for matchup in matchups.matchups %}
+<details class="card"><summary>{{ matchup.home.team_name|default:"Open opponent" }} vs {{ matchup.away.team_name|default:"Open opponent" }} · {{ matchup.home.total_points|floatformat:2|default:"—" }} – {{ matchup.away.total_points|floatformat:2|default:"—" }}</summary>
+{% include 'leagues/matchup_lineup.html' with side=matchup.home %}
+{% include 'leagues/matchup_lineup.html' with side=matchup.away %}
+</details>
+{% empty %}<p>No matchups saved for this week.</p>{% endfor %}
+<h2>Season schedule</h2>
+{% if not schedule.full_schedule_saved %}<p class="muted">Full schedule not saved yet. Update league data to retrieve it. Any older matchup observations are shown below.</p>{% endif %}
+<p class="muted">Future opponents may change. An open opponent can indicate a bye or an undecided matchup.</p>
+<div class="table-wrap"><table><thead><tr><th>Period</th><th>Weeks</th><th>Home</th><th>Away</th></tr></thead><tbody>
+{% for row in schedule.matchups %}<tr><td>{{ row.matchup_period }}</td><td>{% for week in row.scoring_periods %}<a href="?week={{ week }}">{{ week }}</a> {% empty %}—{% endfor %}</td><td>{{ row.home.team_name|default:"Open opponent" }}{% if row.home.is_manager_team %} (you){% endif %}</td><td>{{ row.away.team_name|default:"Open opponent" }}{% if row.away.is_manager_team %} (you){% endif %}</td></tr>
+{% empty %}<tr><td colspan="4">No schedule saved yet.</td></tr>{% endfor %}
+</tbody></table></div>
+{% endblock %}

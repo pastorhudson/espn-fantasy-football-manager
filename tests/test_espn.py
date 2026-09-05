@@ -145,6 +145,7 @@ def test_sync_creates_history_and_preserves_preferences(payload):
     assert RosterSnapshot.objects.count() == 4
     assert FreeAgentSnapshot.objects.count() == 2
     assert AuditEvent.objects.count() == 2
+    assert league.schedule == payload["schedule"]
     assert len(matchups) == 1
     assert MatchupSnapshot.objects.count() == 2
     slot = RosterSlot.objects.filter(player__espn_id=101).first()
@@ -223,6 +224,7 @@ def test_week_uses_matchup_mapping_not_week_number(payload):
         league, _, matchups = sync_league(client, team_id=1, week=2)
     assert league.scoring_period == 2
     assert league.matchup_period == 1
+    assert league.schedule == payload["schedule"]
     assert len(matchups) == 1
     assert RosterSlot.objects.first().projected_points is None
 

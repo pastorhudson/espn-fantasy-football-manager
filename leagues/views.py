@@ -29,3 +29,27 @@ def mcp_authorize(request):
             return HttpResponseRedirect(redirect_url)
         return HttpResponseBadRequest("Authorization expired. Return to ChatGPT and connect again.")
     return render(request, "leagues/mcp_authorize.html", {"request_token": request_token})
+
+
+class MatchupListView(LoginRequiredMixin, PermissionRequiredMixin, TemplateView):
+    permission_required = "decisions.view_decision"
+    template_name = "leagues/matchups.html"
+
+    def get(self, request, *args, **kwargs):
+        try:
+            self.week = int(request.GET["week"]) if request.GET.get("week") else None
+            if self.week is not None and self.week < 0:
+                raise ValueError
+        except ValueError:
+            return HttpResponseBadRequest("Week must be a non-negative integer.")
+        return super().get(request, *args, **kwargs)
+
+    def get_context_data(self, **kwargs):
+        from .matchups import matchups_data, my_matchup_data, schedule_data
+
+        return {
+            **super().get_context_data(**kwargs),
+            "mine": my_matchup_data(self.week),
+            "matchups": matchups_data(self.week),
+            "schedule": schedule_data(),
+        }

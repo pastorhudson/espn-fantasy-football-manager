@@ -7,6 +7,7 @@ class League(models.Model):
     season = models.PositiveSmallIntegerField()
     name = models.CharField(max_length=255)
     settings = models.JSONField(default=dict)
+    schedule = models.JSONField(null=True, blank=True)
     scoring_period = models.PositiveSmallIntegerField(default=0)
     matchup_period = models.PositiveSmallIntegerField(default=0)
     last_synced_at = models.DateTimeField(null=True, blank=True)

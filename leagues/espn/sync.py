@@ -117,6 +117,7 @@ def _persist(
         defaults={
             "name": data["settings"]["name"],
             "settings": data["settings"],
+            "schedule": data["schedule"],
             "scoring_period": period,
             "matchup_period": matchup_period,
             "last_synced_at": timezone.now(),

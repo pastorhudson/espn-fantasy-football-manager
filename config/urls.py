@@ -9,7 +9,7 @@ from decisions.views import (
     DecisionUpdateStatusView,
     DecisionUpdateView,
 )
-from leagues.views import TradeOfferListView, mcp_authorize
+from leagues.views import MatchupListView, TradeOfferListView, mcp_authorize
 
 from .health import health
 
@@ -20,6 +20,7 @@ urlpatterns = [
     path("decisions/update/", DecisionUpdateView.as_view(), name="decision-update"),
     path("decisions/update/status/", DecisionUpdateStatusView.as_view(), name="decision-update-status"),
     path("decisions/<int:pk>/", DecisionDetailView.as_view(), name="decision-detail"),
+    path("matchups/", MatchupListView.as_view(), name="matchup-list"),
     path("trades/", TradeOfferListView.as_view(), name="trade-list"),
     path("mcp/authorize/confirm/", mcp_authorize, name="mcp-authorize"),
     path("", TemplateView.as_view(template_name="leagues/home.html"), name="home"),

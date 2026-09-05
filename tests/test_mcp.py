@@ -18,6 +18,9 @@ from leagues.models import McpOAuthClient, McpOAuthGrant
 def test_mcp_advertises_league_tools():
     tools = async_to_sync(mcp.list_tools)()
     assert {tool.name for tool in tools} == {
+        'get_my_matchup',
+        'get_league_matchups',
+        'get_league_schedule',
         'get_league_rosters',
         'get_my_roster',
         'get_trade_offer',
@@ -77,6 +80,9 @@ def test_mcp_discovery_authentication_and_tool_listing(admin_user):
         })
         assert listed.status_code == 200
         assert {tool['name'] for tool in listed.json()['result']['tools']} == {
+            'get_my_matchup',
+            'get_league_matchups',
+            'get_league_schedule',
             'get_league_rosters',
             'get_my_roster',
             'get_trade_offer',

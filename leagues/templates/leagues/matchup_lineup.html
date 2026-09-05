@@ -1,0 +1,8 @@
+<h3>{{ side.team_name|default:"Open opponent" }}{% if side.is_manager_team %} (you){% endif %}</h3>
+{% if side.lineup_available %}
+<p class="muted">Lineup observed {{ side.lineup_observed_at }} · Starter projection: {{ side.projected_starter_total|floatformat:2|default:"Unavailable" }}</p>
+<div class="table-wrap"><table><thead><tr><th>Slot</th><th>Starter</th><th>Injury</th><th class="number">Projected</th><th class="number">Actual</th></tr></thead><tbody>
+{% for player in side.starters %}<tr><td>{{ player.lineup_slot }}</td><td>{{ player.name }}</td><td>{{ player.injury_status|default:"Not reported" }}</td><td class="number">{{ player.projected_points|floatformat:2|default:"—" }}</td><td class="number">{{ player.actual_points|floatformat:2|default:"—" }}</td></tr>
+{% empty %}<tr><td colspan="5">No starters saved.</td></tr>{% endfor %}
+</tbody></table></div>
+{% else %}<p class="muted">No lineup saved for this scoring week.</p>{% endif %}

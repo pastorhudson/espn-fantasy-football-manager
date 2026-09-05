@@ -306,3 +306,25 @@ login**, add an MCP connection using `https://fantasy.marvn.app/mcp`, sign in to
 the manager, and authorize the `league:read` scope. Then ask, for example,
 “Analyze my pending fantasy trade offers.” The connection sends the saved offer
 and roster evidence to ChatGPT. Confirm the live offer and act only in ESPN.
+
+
+### Matchups and schedules
+
+Open **Matchups** in the signed-in navigation to see your opponent, both saved
+starting lineups, weekly projections and actual points, league matchups, and the
+season schedule. Choose a scoring week to inspect saved lineups for that week.
+Matchup scores cover the entire matchup period, including multiweek playoffs.
+Missing projections and unsaved lineups remain unavailable; future opponents can change.
+
+League sync now saves the complete ESPN schedule. Apply migrations with
+`python manage.py migrate`, then run the normal league update to populate it.
+Existing current-matchup snapshots remain readable before that first update.
+
+The authenticated, read-only MCP endpoint also exposes:
+- `get_my_matchup(week=None)`: your opponent and both starting lineups.
+- `get_league_matchups(week=None)`: every matchup and saved lineup for a scoring week.
+- `get_league_schedule(team_id=None)`: the saved season schedule, optionally filtered
+  by ESPN team ID.
+
+Omitting the week selects the latest synced scoring period. Results include
+observation timestamps and explicit schedule/lineup availability.
