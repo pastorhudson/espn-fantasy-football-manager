@@ -18,6 +18,7 @@ from .mcp_data import (
     player_projections_data,
 )
 from .models import TradeOffer
+from .nfl_schedule import nfl_schedule_data, player_schedule_data
 from .trades import list_offer_evidence, offer_evidence
 from .transactions import league_transactions_data
 
@@ -125,3 +126,23 @@ async def get_league_transactions(
     team_id: int | None = None, player_id: int | None = None, limit: int = 50,
 ) -> dict:
     return await sync_to_async(league_transactions_data)(team_id, player_id, limit)
+
+
+@mcp.tool(title="Get NFL game schedule",
+          description="Fetch live ESPN regular-season NFL games, kickoff times, opponents, and status. "
+          "Week 1–18 defaults to the saved league week. Time zone uses an IANA name.",
+          annotations=ToolAnnotations(readOnlyHint=True, destructiveHint=False, openWorldHint=True))
+async def get_nfl_schedule(week: int | None = None, timezone_name: str = "America/New_York") -> dict:
+    return await sync_to_async(nfl_schedule_data)(week, timezone_name)
+
+
+@mcp.tool(title="Get player schedules and decision times",
+          description="Find my first/next kickoff and each roster player's live ESPN game and suggested "
+          "injury-review time. Includes bench alternatives. Uses latest saved roster; actual lineup locks "
+          "and availability must be confirmed in ESPN. Optional fantasy team ID and player ID filter "
+          "the results; week is NFL regular-season week 1–18, defaulting to saved league week.",
+          annotations=ToolAnnotations(readOnlyHint=True, destructiveHint=False, openWorldHint=True))
+async def get_player_schedule(week: int | None = None, team_id: int | None = None,
+                              player_id: int | None = None,
+                              timezone_name: str = "America/New_York") -> dict:
+    return await sync_to_async(player_schedule_data)(week, team_id, player_id, timezone_name)

@@ -334,3 +334,21 @@ observation timestamps and explicit schedule/lineup availability.
   timestamps. Returns newest first, deduplicates repeated sync observations, and
   supports limits from 1 to 200. Filters preserve all players in a matching trade.
   Coverage is limited to saved sync history; no database migration is needed.
+
+### NFL kickoffs and player decision planning
+
+- `get_nfl_schedule(week=None, timezone_name="America/New_York")` reads ESPN's
+  public NFL scoreboard for a regular-season week (1–18).
+- `get_player_schedule(week=None, team_id=None, player_id=None,
+  timezone_name="America/New_York")` joins those games to the latest saved roster,
+  defaulting to your team. It returns first/next kickoff, opponents, game status,
+  and a suggested review time 90 minutes before scheduled kickoff.
+
+Examples: “When is my first kickoff this week?”, “Which bench alternatives play
+  before my questionable starter?”, and “When should I review my lineup?”
+
+Times are refreshed from ESPN on each call; roster and injury information retain
+  their saved observation timestamps. Review times are planning suggestions, not
+  confirmed inactive announcements or league lock deadlines. Confirm league rules
+  and player availability in ESPN. Missing games do not establish a bye. Future
+  weeks use the latest saved roster. No new migration or sync is required.
