@@ -1,9 +1,10 @@
 {% extends 'decisions/base.html' %}
+{% load local_time %}
 {% block title %}Matchups & schedule{% endblock %}
 {% block content %}
 <p class="eyebrow">Saved ESPN league data</p>
 <h1>Matchups & schedule</h1>
-<p class="muted">{{ schedule.league|default:"No league synced yet" }} · Last league sync: {{ schedule.observed_at|default:"Not available" }}</p>
+<p class="muted">{{ schedule.league|default:"No league synced yet" }} · Last league sync: {{ schedule.observed_at|local_dt|default:"Not available" }}</p>
 <form method="get"><label for="week">Scoring week</label><input id="week" name="week" type="number" min="0" value="{{ matchups.scoring_period }}"><button type="submit">Show week</button></form>
 <h2>Your matchup · Week {{ matchups.scoring_period }}</h2>
 {% for matchup in mine.matchups %}
