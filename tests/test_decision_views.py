@@ -53,7 +53,7 @@ def test_login_logout_and_safe_redirect(client, django_user_model):
     response = client.post(reverse("login"), {
         "username": "manager", "password": "test-password", "next": "https://evil.example/",
     })
-    assert response.url == reverse("decision-list")
+    assert response.url == reverse("overview")
     assert client.get(reverse("logout")).status_code == 405
     assert client.post(reverse("logout")).url == reverse("login")
     assert client.get(reverse("decision-list")).status_code == 302

@@ -1,0 +1,12 @@
+{% load local_time %}
+{% for transaction in activity.transactions %}
+<article class="activity-item">
+  <span class="badge">{% if transaction.status == 'EXECUTED' %}Completed{% else %}{{ transaction.status|default:"Status unknown" }}{% endif %}</span>
+  <small>{{ transaction.processed_at|local_dt|default:"Time not supplied" }}</small>
+  {% for player in transaction.players %}<p><strong>{{ player.player_name }}</strong><br>
+    {% if player.action == 'ADD' %}{{ player.to_team|default:"Unknown team" }} · {% if transaction.status == 'EXECUTED' %}added{% else %}add request{% endif %}
+    {% elif player.action == 'DROP' %}{{ player.from_team|default:"Unknown team" }} · {% if transaction.status == 'EXECUTED' %}dropped{% else %}drop request{% endif %}
+    {% else %}{{ player.from_team|default:"Unknown team" }} → {{ player.to_team|default:"Unknown team" }} · trade{% endif %}
+  </p>{% endfor %}
+</article>
+{% empty %}<p class="muted">No saved activity found.</p>{% endfor %}

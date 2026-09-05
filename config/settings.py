@@ -184,7 +184,7 @@ if SNAPSHOT_RETENTION_DAYS < 1:
     raise ImproperlyConfigured("SNAPSHOT_RETENTION_DAYS must be at least one.")
 
 LOGIN_URL = "login"
-LOGIN_REDIRECT_URL = "decision-list"
+LOGIN_REDIRECT_URL = "overview"
 LOGOUT_REDIRECT_URL = "login"
 
 # Free, public feeds only. No API keys or subscriptions are required.

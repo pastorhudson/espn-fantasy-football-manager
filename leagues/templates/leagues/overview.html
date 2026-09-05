@@ -1,0 +1,16 @@
+{% extends 'decisions/base.html' %}
+{% load local_time %}
+{% block title %}Weekly overview{% endblock %}
+{% block content %}
+<p class="eyebrow">Your week at a glance</p><h1>{{ roster.team_name|default:"Weekly overview" }}</h1>
+<p class="muted">{{ league|default:"No league synced yet" }}{% if roster %} · Week {{ roster.scoring_period }}<br>Roster updated {{ roster.captured_at|local_dt }}{% endif %}</p>
+<div data-live-schedule="{% url 'player-schedule' %}?overview=1">
+<section class="card hero-card"><p class="eyebrow">Next kickoff</p><h2>Your week, in focus.</h2><p class="live-status" role="status">Loading live kickoff times…</p><noscript><a href="{% url 'player-schedule' %}?overview=1">View kickoff times</a></noscript></section>
+</div>
+<div class="dashboard-grid">
+<section class="card"><div class="section-title"><h2>Your matchup</h2><a href="{% url 'matchup-list' %}">Details</a></div>
+{% for matchup in mine.matchups %}<p>{{ matchup.home.team_name }} <span class="muted">vs</span> {{ matchup.away.team_name }}</p><h2>{{ matchup.home.total_points|floatformat:1|default_if_none:"—" }} – {{ matchup.away.total_points|floatformat:1|default_if_none:"—" }}</h2><small>Actual matchup-period points</small>{% empty %}<p class="muted">No matchup saved yet.</p>{% endfor %}</section>
+<section class="card"><h2>Plan your lineup</h2><p>Compare starters and bench alternatives before the earlier game begins.</p><a class="button" href="{% url 'my-team' %}">Review my team</a><p><a href="{% url 'decision-list' %}">Recommendations & league updates</a></p></section>
+</div>
+<section class="card"><div class="section-title"><h2>Latest league moves</h2><a href="{% url 'activity' %}">View all</a></div>{% include 'leagues/activity_items.html' %}</section>
+{% endblock %}

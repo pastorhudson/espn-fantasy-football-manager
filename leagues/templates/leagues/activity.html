@@ -1,0 +1,6 @@
+{% extends 'decisions/base.html' %}
+{% load local_time %}
+{% block title %}League activity{% endblock %}
+{% block content %}<p class="eyebrow">Around the league</p><h1>League activity</h1><p class="muted">Saved pickups, drops, and trades · Updated {{ activity.latest_observed_at|local_dt|default:"Not yet" }}</p>
+<form method="get"><label for="team">Fantasy team</label><p><select name="team" id="team"><option value="">All teams</option>{% for team in teams %}<option value="{{ team.espn_id }}" {% if selected_team == team.espn_id %}selected{% endif %}>{{ team.name }}</option>{% endfor %}</select> <button type="submit">Filter</button></p></form>
+<section class="card">{% include 'leagues/activity_items.html' %}</section><p class="muted">Showing {{ activity.count }} of {{ activity.total_matching }} saved matching transactions. Saved history may be incomplete.</p>{% endblock %}

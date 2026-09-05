@@ -1,0 +1,3 @@
+{% extends 'decisions/base.html' %}
+{% block title %}More{% endblock %}
+{% block content %}<p class="eyebrow">Explore & manage</p><h1>More</h1><section class="card"><a class="menu-link" href="{% url 'my-team' %}">Player schedules & kickoff times</a><a class="menu-link" href="{% url 'matchup-list' %}">League matchups & season schedule</a><a class="menu-link" href="{% url 'trade-list' %}">Pending trade offers</a><a class="menu-link" href="{% url 'decision-list' %}">Recommendations & league updates</a><form method="post" action="{% url 'logout' %}">{% csrf_token %}<p><button type="submit">Sign out</button></p></form></section>{% endblock %}

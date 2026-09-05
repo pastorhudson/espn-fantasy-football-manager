@@ -65,7 +65,7 @@
           <h1 id="welcome">Know your roster.<br><span>Plan your next move.</span></h1>
           <p class="intro">A home for your ESPN league snapshots, player projections, and weekly matchups. Start with the facts. Make every decision count.</p>
           <nav class="actions" aria-label="Get started">
-            {% if user.is_authenticated %}<a class="button" href="{% url 'decision-list' %}">View decisions</a>{% else %}<a class="button" href="{% url 'login' %}">Sign in</a>{% endif %}
+            {% if user.is_authenticated %}<a class="button" href="{% url 'overview' %}">Open weekly overview</a>{% else %}<a class="button" href="{% url 'login' %}">Sign in</a>{% endif %}
             <a class="button secondary" href="{% url 'health' %}">Check service health</a>
           </nav>
         </div>

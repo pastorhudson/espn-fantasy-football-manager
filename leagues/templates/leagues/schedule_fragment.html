@@ -1,0 +1,12 @@
+{% load local_time %}
+{% if overview %}
+<section class="card hero-card"><p class="eyebrow">Next roster kickoff · Eastern time</p>
+{% if schedule.next_kickoff %}<h2>{{ schedule.next_kickoff|local_dt }}</h2><p>Includes your starters and bench options.</p>{% else %}<h2>{% if schedule.available %}No upcoming kickoff found{% else %}Kickoff times unavailable{% endif %}</h2><p>Check the schedule in ESPN before setting your lineup.</p>{% endif %}
+<p class="live-status">{% if schedule.available %}Schedule checked {{ schedule.observed_at|local_dt }}{% else %}Live ESPN schedule could not be loaded. Your saved league data is still available.{% endif %}</p></section>
+<h2>Players to review</h2><p class="muted">Saved injury flags across your roster. Review times are planning suggestions, not lineup locks.</p>
+<div class="player-grid">{% for player in attention %}{% include 'leagues/player_card.html' %}{% empty %}<p class="muted">No saved injury flags to review. Check current news before kickoff.</p>{% endfor %}</div>
+{% else %}
+<p class="live-status">{% if schedule.available %}Live schedule checked {{ schedule.observed_at|local_dt }} · Eastern time{% else %}Live kickoff times unavailable. Saved roster information is shown below. Reload to retry.{% endif %}</p>
+<p class="muted">Review times are 90-minute planning buffers. Check injury news and ESPN lineup rules before kickoff.</p>
+<div class="player-grid">{% for player in players %}{% include 'leagues/player_card.html' %}{% empty %}<p>No players found in this group.</p>{% endfor %}</div>
+{% endif %}

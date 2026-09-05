@@ -1,0 +1,9 @@
+{% load local_time %}
+<article class="card player-card">
+  <div class="player-head"><div><span class="eyebrow">{{ player.lineup_slot }}</span><h3>{{ player.name }}</h3></div><div class="number"><strong>{{ player.projected_points|floatformat:1|default_if_none:"—" }}</strong><br><small>projected</small></div></div>
+  {% if player.injury_status and player.injury_status != 'ACTIVE' %}<p class="alert">{{ player.injury_status }} · Saved injury status</p>{% endif %}
+  {% for game in player.games %}<p>{{ game.name }}</p><p><strong>{{ game.kickoff|local_dt|default:"Kickoff time unconfirmed" }}</strong></p><small>{{ game.status_detail|default:game.status }}</small>
+  {% empty %}<p class="muted">{% if player.schedule_status == 'no_game_found' %}No game found. Bye or schedule not confirmed.{% else %}Kickoff information not available yet.{% endif %}</p>{% endfor %}
+  {% if player.kickoff_has_passed %}<p class="badge">Kickoff has passed</p>{% elif player.suggested_review_at %}<p class="alert">Review by {{ player.suggested_review_at|local_dt }}</p>{% endif %}
+  <details><summary>Player details</summary><p>Actual points: {{ player.actual_points|floatformat:1|default_if_none:"—" }}</p><p>ESPN player ID: {{ player.player_id }}</p><small>Review times are suggestions. Confirm injury news and lineup eligibility in ESPN.</small></details>
+</article>

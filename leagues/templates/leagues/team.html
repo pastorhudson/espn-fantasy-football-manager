@@ -1,0 +1,13 @@
+{% extends 'decisions/base.html' %}
+{% load local_time %}
+{% block title %}My Team{% endblock %}
+{% block content %}
+<p class="eyebrow">Prepare before kickoff</p><h1>My Team</h1>
+<p class="muted">{{ roster.team_name|default:"No roster saved yet" }}{% if roster %} · Week {{ roster.scoring_period }}<br>Roster & injury data updated {{ roster.captured_at|local_dt }}{% endif %}</p>
+<nav class="filters" aria-label="Roster filter"><a href="?group=all" {% if group == 'all' %}aria-current="page"{% endif %}>All</a><a href="?group=starters" {% if group == 'starters' %}aria-current="page"{% endif %}>Starters</a><a href="?group=bench" {% if group == 'bench' %}aria-current="page"{% endif %}>Bench / IR</a></nav>
+<div data-live-schedule="{% url 'player-schedule' %}?group={{ group }}">
+<p class="live-status" role="status">Loading kickoff times. Your saved roster is ready below.</p>
+<noscript><p><a href="{% url 'player-schedule' %}?group={{ group }}">View player kickoff times</a></p></noscript>
+<div class="player-grid">{% for player in players %}{% include 'leagues/player_card.html' %}{% empty %}<p>No players in this group. <a href="{% url 'decision-list' %}">Check league updates</a>.</p>{% endfor %}</div>
+</div>
+{% endblock %}
