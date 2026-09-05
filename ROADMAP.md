@@ -55,7 +55,7 @@ enable ESPN writes.
 - [x] Share a database enqueue gate with scheduled updates; reject repeated
       requests, duplicate delivery, and expired tokens. Include imminent-schedule
       checks, a completion/failure cooldown, and abandoned-job recovery.
-- [ ] Deploy the update reservation migration and verify a button-triggered update
+- [x] Deploy the update reservation migration and verify a button-triggered update
       alongside the existing beat schedule in production.
 
 ### Better decision inputs and evidence
@@ -123,14 +123,37 @@ numerical projection source.
 - [ ] Compare predictions with actual results to assess whether additional
       sources improve recommendations over the ESPN-only baseline.
 
+### League matchups and season schedule
+
+Status: implemented locally on September 5, 2026; local migrations applied.
+Validation: all 96 tests passed, lint passed, and no missing migrations detected.
+Production rollout and fresh schedule synchronization remain pending.
+
+- [x] Save the complete ESPN league schedule during atomic league synchronization,
+      while retaining historical current-matchup observations.
+- [x] Add an authenticated, permission-controlled **Matchups** view with the
+      manager's opponent, both starting lineups, projections, actual points,
+      league matchups, and the season schedule.
+- [x] Support scoring-week selection and multiweek matchup periods; distinguish
+      weekly starter projections from full matchup-period scores.
+- [x] Exclude bench and IR slots from starter comparisons. Show missing lineups
+      and projections explicitly, preserve observation timestamps, and avoid
+      substituting another week's roster for an unsaved lineup.
+- [x] Expose read-only MCP tools `get_my_matchup`, `get_league_matchups`, and
+      `get_league_schedule`, with optional week or ESPN team filters.
+- [x] Keep existing matchup snapshots readable before the first full schedule
+      sync; label incomplete schedule coverage and open opponents explicitly.
+- [x] Deploy the schedule migration and updated web/MCP service, run a fresh
+      league sync, and verify the Matchups view and new tools in production.
+
 ### Controlled execution and delivery
 
 - [ ] ESPN write validation, including game-lock checks before roster changes.
 - [ ] Policy enforcement and controlled roster-action execution.
 - [ ] Notifications for decisions, failures, and required manager action.
 - [x] Read-only OAuth-protected MCP access for pending trades, the manager roster,
-      league teams and rosters, and available ESPN projections in ChatGPT; no
-      ESPN transaction tools are exposed.
+      league teams and rosters, available ESPN projections, matchups, and season
+      schedules in ChatGPT; no ESPN transaction tools are exposed.
 - [ ] Verify a real pending ESPN trade payload, ChatGPT OAuth connection, tool
       selection, and analysis in production.
 - [ ] Deployment rollout and verification of these capabilities.
