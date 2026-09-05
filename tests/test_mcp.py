@@ -56,6 +56,13 @@ def test_mcp_discovery_authentication_and_tool_listing(admin_user):
         assert auth['code_challenge_methods_supported'] == ['S256']
         assert auth['scopes_supported'] == ['league:read']
         assert resource['resource'].endswith('/mcp')
+        root_resource = client.get('/.well-known/oauth-protected-resource')
+        assert root_resource.status_code == 200
+        assert root_resource.json() == resource
+        root_unauthorized = client.post('/', json={})
+        assert root_unauthorized.status_code == 401
+        assert 'resource_metadata=' in root_unauthorized.headers['www-authenticate']
+        assert client.get('/').status_code == 200
         response = client.post('/mcp', json={
             'jsonrpc': '2.0', 'id': 1, 'method': 'initialize',
             'params': {'protocolVersion': '2025-03-26', 'capabilities': {},
@@ -80,6 +87,11 @@ def test_mcp_discovery_authentication_and_tool_listing(admin_user):
             'jsonrpc': '2.0', 'id': 2, 'method': 'tools/list', 'params': {},
         })
         assert listed.status_code == 200
+        root_listed = client.post('/', headers=headers, json={
+            'jsonrpc': '2.0', 'id': 3, 'method': 'tools/list', 'params': {},
+        })
+        assert root_listed.status_code == 200
+        assert root_listed.json()['result'] == listed.json()['result']
         assert {tool['name'] for tool in listed.json()['result']['tools']} == {
             'get_my_matchup',
             'get_league_matchups',
